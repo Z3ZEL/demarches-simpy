@@ -1,0 +1,14 @@
+query getDossier($dossierNumber: Int!)
+{
+    dossier(number: $dossierNumber)
+        {
+        id number state
+        attestation {
+            filename
+            url
+        }
+        usager{
+            email
+        }
+        }
+}

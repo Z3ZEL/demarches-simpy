@@ -1,0 +1,24 @@
+query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false) 
+    { 
+    demarche(number: $demarcheNumber)
+        { 
+            id, number, title
+            dossiers(first: 100) 
+            { 
+                nodes 
+                    { 
+                    id number
+                    } 
+            } 
+            activeRevision @include(if: $includeRevision) 
+            { 
+                id
+                champDescriptors {
+                    __typename
+                    id
+                    label
+                    description
+                }
+            }
+        } 
+    }
