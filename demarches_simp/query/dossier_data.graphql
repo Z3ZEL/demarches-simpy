@@ -1,4 +1,4 @@
-query getDossier($dossierNumber: Int!)
+query getDossier($dossierNumber: Int!, $includeChamps : Boolean = false, $includeAnotations : Boolean = false)
 {
     dossier(number: $dossierNumber)
         {
@@ -9,6 +9,16 @@ query getDossier($dossierNumber: Int!)
         }
         usager{
             email
+        }
+        champs @include(if: $includeChamps){
+            id
+            label
+            stringValue
+        }
+        annotations @include(if: $includeAnotations){
+            id
+            label
+            stringValue
         }
         }
 }

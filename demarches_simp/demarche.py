@@ -31,7 +31,7 @@ class Demarche(IData):
     #Champs retrieve
     def get_fields(self) -> list:
         if self.request.is_variable_set('includeRevision'):
-            return self.force_fetch().get_data()['demarche']['activeRevision']['champDescriptors']
+            return self.get_data()['demarche']['activeRevision']['champDescriptors']
         else:
             self.request.add_variable('includeRevision', True)
             return self.force_fetch().get_data()['demarche']['activeRevision']['champDescriptors']    
