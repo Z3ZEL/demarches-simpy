@@ -38,5 +38,5 @@ class Demarche(IData):
 
 
     def __str__(self) -> str:
-        return str(self.get_data()['demarche']['name']) + ' Autheur : ' + str(self.get_data()['demarche']['number'])
+        return str("Id : "+self.get_data()['demarche']['id']) + ' Number : ' + str(self.get_data()['demarche']['number'])
 

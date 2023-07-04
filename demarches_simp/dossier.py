@@ -2,7 +2,7 @@ from demarches_simp.data_interface import IData
 
 class Dossier(IData):
     from demarches_simp.connection import Profile
-    def __init__(self, number : int, id : str, profile : Profile) :
+    def __init__(self, number : int, profile : Profile, id : str = None) :
 
         # Building the request
         from demarches_simp.connection import RequestBuilder
@@ -21,7 +21,7 @@ class Dossier(IData):
 
 
     def __str__(self) -> str:
-        return str("Démarche id : "+self.get_data()['dossier']['id']) + ' (' + str(self.get_data()['dossier']['usager']['email']) + ')'
+        return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + ' (' + str(self.get_data()['dossier']['usager']['email']) + ')'
 
 
 
