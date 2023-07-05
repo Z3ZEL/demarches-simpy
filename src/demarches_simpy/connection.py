@@ -1,3 +1,5 @@
+from pathlib import Path
+
 class Profile():
     '''
     This is tjhe profile class.
@@ -26,7 +28,8 @@ class RequestBuilder():
         self.profile = profile
         self.variables = {}
         try:
-            self.query = open(graph_ql_query_path, 'r').read()
+            path = Path(__file__).parent / graph_ql_query_path
+            self.query = open(path, 'r').read()
         except:
             raise Exception('Could not open the GraphQL query file.')
         print('RequestBuilder class created from '+graph_ql_query_path)

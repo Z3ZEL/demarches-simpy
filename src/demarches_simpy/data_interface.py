@@ -1,6 +1,6 @@
-from demarches_simp.utils import bcolors
+from .utils import bcolors
 class IData():
-    from demarches_simp.connection import Profile, RequestBuilder
+    from .connection import Profile, RequestBuilder
     def __init__(self, number, request : RequestBuilder, profile : Profile) -> None:
         self.number = number
         self.profile = profile

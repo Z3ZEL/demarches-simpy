@@ -1,12 +1,12 @@
-from demarches_simp.data_interface import IData
+from .data_interface import IData
 
 class Dossier(IData):
-    from demarches_simp.connection import Profile
+    from .connection import Profile
     def __init__(self, number : int, profile : Profile, id : str = None) :
 
         # Building the request
-        from demarches_simp.connection import RequestBuilder
-        request = RequestBuilder(profile, './demarches_simp/query/dossier_data.graphql')
+        from .connection import RequestBuilder
+        request = RequestBuilder(profile, './query/dossier_data.graphql')
         request.add_variable('dossierNumber', number)
 
         # Add custom variables

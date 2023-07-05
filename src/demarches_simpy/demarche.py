@@ -1,11 +1,11 @@
-from demarches_simp.data_interface import IData
-from demarches_simp.connection import RequestBuilder
+from .data_interface import IData
+from .connection import RequestBuilder
 #TODO: Add multiple pages retrieval for dossiers
 class Demarche(IData):
-    from demarches_simp.connection import Profile
+    from .connection import Profile
     def __init__(self, number : int, profile : Profile) :
         # Building the request
-        request = RequestBuilder(profile, './demarches_simp/query/demarche.graphql')
+        request = RequestBuilder(profile, './query/demarche.graphql')
         request.add_variable('demarcheNumber', number)
         
         # Call the parent constructor
@@ -21,7 +21,7 @@ class Demarche(IData):
     
     def get_dossiers(self) -> list:
         if len(self.dossiers) == 0 or self.get_dossiers_count() != len(self.dossiers):
-            from demarches_simp.dossier import Dossier
+            from .dossier import Dossier
             dossiers = []
             for (id,number) in self.get_dossier_infos():
                 dossiers.append(Dossier(number=number, id=id, profile=self.profile))
