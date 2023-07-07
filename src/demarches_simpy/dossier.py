@@ -1,21 +1,44 @@
 from .data_interface import IData
+from .utils import ILog
+from .actions import MessagerSender
 
-class Dossier(IData):
+class DossierState:
+    ARCHIVE = "Archiver"
+    INSTRUCTION = "EnInstruction"
+    ACCEPTER = "Accepter"
+    REFUSER = "Refuser"
+    SANS_SUITE = "ClasserSansSuite"
+
+
+
+class Dossier(IData, ILog):
     from .connection import Profile
-    def __init__(self, number : int, profile : Profile, id : str = None) :
+    def __init__(self, number : int, profile : Profile, id : str = None, **kwargs) :
 
         # Building the request
         from .connection import RequestBuilder
-        request = RequestBuilder(profile, './query/dossier_data.graphql')
+        request = RequestBuilder(profile, './query/dossier_data.graphql', **kwargs)
         request.add_variable('dossierNumber', number)
 
         # Add custom variables
         self.id = id
         self.fields = None
         self.anotations = None
+        self.profile = profile
+        self.kwargs = kwargs
 
         # Call the parent constructor
-        super().__init__(number=number, request=request, profile=profile)
+        IData.__init__(self,number, request, profile)
+        ILog.__init__(self, header='DOSSIER', **kwargs)
+
+
+        self.debug('Dossier class created')
+
+        if not self.profile.has_instructeur_id():
+            self.warning('No instructeur id was provided to the profile, some features will be missing.')
+
+
+        
 
     def get_dossier_state(self) -> dict:
         return self.get_data()['dossier']['state']
@@ -41,6 +64,13 @@ class Dossier(IData):
             self.anotations = anotations
         return self.anotations
 
+    def send_message(self, msg : str):
+        if not self.profile.has_instructeur_id():
+            self.error('No instructeur id was provided to the profile, cannot send message.')
+            return
+        sender = MessagerSender(self.profile, self.id, **self.kwargs)
+        sender.send(msg)
+     
     def __str__(self) -> str:
         return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + ' (' + str(self.get_data()['dossier']['usager']['email']) + ')'
 

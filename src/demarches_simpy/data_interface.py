@@ -1,7 +1,7 @@
 from .utils import bcolors
-class IData():
+class IData(object):
     from .connection import Profile, RequestBuilder
-    def __init__(self, number, request : RequestBuilder, profile : Profile) -> None:
+    def __init__(self, number, request : RequestBuilder, profile : Profile, **kwargs) -> None:
         self.number = number
         self.profile = profile
         self.has_been_fetched = False

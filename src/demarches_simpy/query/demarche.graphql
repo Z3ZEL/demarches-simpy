@@ -1,4 +1,4 @@
-query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false) 
+query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false, $includeGroupeInstructeurs : Boolean = false, $includeInstructeurs : Boolean = false) 
     { 
     demarche(number: $demarcheNumber)
         { 
@@ -20,5 +20,16 @@ query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false)
                     description
                 }
             }
+            groupeInstructeurs @include(if: $includeGroupeInstructeurs) {
+                id 
+                number
+                label
+                instructeurs @include(if : $includeInstructeurs){
+                    id
+                    email
+                }
+
+            }
+
         } 
     }
