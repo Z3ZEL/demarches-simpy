@@ -52,3 +52,14 @@ mutation dossierClasserSansSuite($input: DossierClasserSansSuiteInput!) {
     }
   }
 }
+mutation dossierRepasserEnConstruction($input: DossierRepasserEnConstructionInput!)
+{
+  dossierRepasserEnConstruction(input: $input) {
+    dossier {
+      id
+    }
+    errors {
+      message
+    }
+  }
+}

@@ -56,7 +56,10 @@ class StateChanger(ILog):
             variables['motivation'] = "Test"
 
         self.request.add_variable('input',variables)
-        operation_name = "dossier" + ("Passer" if state == DossierState.INSTRUCTION else "") + state
+        operation_name = "dossier"
+        operation_name += ("Passer" if state == DossierState.INSTRUCTION else "")
+        operation_name += ("Repasser" if state == DossierState.CONSTRUCTION else "")
+        operation_name += state
 
 
         custom_body = {
@@ -66,10 +69,8 @@ class StateChanger(ILog):
         }
 
         resp = self.request.send_request(custom_body)
-
         if 'errors' in resp.json() and resp.json()['errors'] != None:
             self.error('State not changed : '+resp.json()['errors'][0]['message'])
-            return False
         else:
             self.debug('State changed to '+state+' for dossier '+self.dossier.get_id())
         return True

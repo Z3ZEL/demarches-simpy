@@ -4,10 +4,24 @@ from .actions import MessagerSender
 
 class DossierState:
     ARCHIVE = "Archiver"
+    CONSTRUCTION = "EnConstruction"
     INSTRUCTION = "EnInstruction"
     ACCEPTER = "Accepter"
     REFUSER = "Refuser"
     SANS_SUITE = "ClasserSansSuite"
+
+    @staticmethod
+    def get_from_string(str):
+        if str == 'en_construction':
+            return DossierState.CONSTRUCTION
+        elif str == 'en_instruction':
+            return DossierState.INSTRUCTION
+        elif str == 'accepter':
+            return DossierState.ACCEPTER
+        elif str == 'refuser':
+            return DossierState.REFUSER
+        elif str == 'sans_suite':
+            return DossierState.SANS_SUITE
 
 
 

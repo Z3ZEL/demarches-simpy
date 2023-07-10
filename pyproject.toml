@@ -3,11 +3,11 @@ requires = ["setuptools>=61.0","requests"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "demarches-simpy"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
-  { name="Example Author", email="author@example.com" },
+  { name="Esteban Rodriguez (Z3ZEL)", email="contact@rodriguez-esteban.com" },
 ]
-description = "A small example package"
+description = "A simple python wrapper for the demarches-simplifiees.fr API"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -17,5 +17,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/pypa/sampleproject"
+"Homepage" = "https://github.com/Z3ZEL/demarches-simplifiees"
 "Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
