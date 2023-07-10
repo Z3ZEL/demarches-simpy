@@ -9,6 +9,14 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+class DemarchesSimpyException(Exception):
+    def __init__(self,message="There was an error", header="[MAIN]",*args: object) -> None:
+        super().__init__(message, *args)
+        self.header = header
+        self.message = message
+    def __str__(self) -> str:
+        return f"{bcolors.FAIL} [ERROR] [{self.header}] {super().__str__()}{bcolors.ENDC}"
+
 class ILog(object):
     def __init__(self, header, profile, **kwargs):
         self.header = header
@@ -56,8 +64,7 @@ class ILog(object):
 
     def error(self, msg):
         msg = str(msg)
-        print(f"{bcolors.FAIL}[{self.header}] {msg}{bcolors.ENDC}")
-        raise Exception("Error in "+self.header+": "+msg)
+        raise DemarchesSimpyException(header=self.header, message=msg)
 
     def warning(self, msg):
         if not self.displaying_warning:

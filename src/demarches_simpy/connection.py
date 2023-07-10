@@ -1,5 +1,5 @@
 from pathlib import Path
-from .utils import ILog
+from .utils import ILog, DemarchesSimpyException
 
 class Profile(ILog):
     '''
@@ -46,7 +46,7 @@ class RequestBuilder(ILog):
             path = Path(__file__).parent / graph_ql_query_path
             self.query = open(path, 'r').read()
         except:
-            raise Exception('Could not open the GraphQL query file.')
+            self.error('Cannot open file '+graph_ql_query_path)
         
         self.debug('RequestBuilder class created from '+graph_ql_query_path)
 
@@ -75,11 +75,15 @@ class RequestBuilder(ILog):
 
     def send_request(self, custom_body=None) -> Response:
         import requests
-        return requests.post(
+        resp = requests.post(
             self.profile.get_url(),
             json = self.__get_body__() if custom_body == None else custom_body,
             headers = self.__get_header__()
         )
-    
+        if 'errors' in resp.json() and resp.json()['errors'] != None:
+            self.error('Message not sent : '+resp.json()['errors'][0]['message'])
+        else:
+            return resp
+
 
     

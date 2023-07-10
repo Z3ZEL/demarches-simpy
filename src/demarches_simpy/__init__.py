@@ -1,6 +1,6 @@
 from .dossier import Dossier, DossierState
-from .connection import Profile
 from .demarche import Demarche
-from .actions import StateChanger
+from .connection import Profile
+from .actions import StateChanger, MessageSender
 
 

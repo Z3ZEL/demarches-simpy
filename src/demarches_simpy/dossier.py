@@ -1,6 +1,5 @@
 from .data_interface import IData
 from .utils import ILog
-from .actions import MessagerSender
 
 class DossierState:
     ARCHIVE = "Archiver"
@@ -87,13 +86,6 @@ class Dossier(IData, ILog):
             anotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
             self.anotations = anotations
         return self.anotations
-
-    def send_message(self, msg : str):
-        if not self.profile.has_instructeur_id():
-            self.error('No instructeur id was provided to the profile, cannot send message.')
-            return
-        sender = MessagerSender(self.profile, self.id, **self.kwargs)
-        sender.send(msg)
      
     def __str__(self) -> str:
         return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + ' (' + str(self.get_data()['dossier']['usager']['email']) + ')'
