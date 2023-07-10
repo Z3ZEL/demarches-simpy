@@ -27,6 +27,7 @@ class DossierState:
 
 class Dossier(IData, ILog):
     from .connection import Profile
+    from .demarche import Demarche
     def __init__(self, number : int, profile : Profile, id : str = None, **kwargs) :
 
         # Building the request
@@ -37,6 +38,7 @@ class Dossier(IData, ILog):
         # Add custom variables
         self.id = id
         self.fields = None
+        self.instructeurs = None
         self.anotations = None
         self.profile = profile
         self.kwargs = kwargs
@@ -56,7 +58,16 @@ class Dossier(IData, ILog):
 
     def get_dossier_state(self) -> dict:
         return self.get_data()['dossier']['state']
-
+    def get_attached_demarche_id(self) -> str:
+        return self.get_data()['dossier']['demarche']['id']
+    def get_attached_demarche(self) -> Demarche:
+        from .demarche import Demarche
+        return Demarche(number=self.get_attached_demarche_id(), profile=self.profile,**self.kwargs)
+    def get_attached_instructeurs_info(self):
+        if self.instructeurs is None:
+            self.request.add_variable('includeInstructeurs', True)
+            self.instructeurs = self.force_fetch().get_data()['dossier']['instructeurs']
+        return self.instructeurs
     
     #Champs retrieve
     def get_fields(self) -> dict:
