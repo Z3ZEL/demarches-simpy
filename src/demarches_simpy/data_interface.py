@@ -1,5 +1,5 @@
-from .utils import bcolors
-class IData(object):
+from .utils import bcolors, ILog, DemarchesSimpyException
+class IData(ILog):
     from .connection import Profile, RequestBuilder
     def __init__(self, number, request : RequestBuilder, profile : Profile, **kwargs) -> None:
         self.number = number
@@ -11,13 +11,13 @@ class IData(object):
         if not self.has_been_fetched:
             response = self.request.send_request()
             if response.status_code != 200:
-                raise Exception('Could not fetch data.')
+                self.error("Could not fetch data : "+str(response.status_code)+" "+response.reason)
             #check if errors key is in response
             if 'errors' in response.json():
-                raise Exception(bcolors.FAIL + 'Could not fetch data : ' + response.json()['errors'][0]['message'] + bcolors.ENDC)
-                
+                self.error("Could not fetch data : "+str(response.json()['errors']))
             self.data = response.json()['data']
             self.has_been_fetched = True
+            self.debug('Data fetched')
     def get_data(self) -> dict:
         self.fetch()
         return self.data
