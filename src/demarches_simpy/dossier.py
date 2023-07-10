@@ -62,7 +62,7 @@ class Dossier(IData, ILog):
         return self.get_data()['dossier']['demarche']['id']
     def get_attached_demarche(self) -> Demarche:
         from .demarche import Demarche
-        return Demarche(number=self.get_attached_demarche_id(), profile=self.profile,**self.kwargs)
+        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self.profile,**self.kwargs)
     def get_attached_instructeurs_info(self):
         if self.instructeurs is None:
             self.request.add_variable('includeInstructeurs', True)
