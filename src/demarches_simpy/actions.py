@@ -6,14 +6,14 @@ import json
 class MessagerSender(ILog):
     from .connection import Profile
     def __init__(self, profile : Profile, dossier_id : str, **kwargs):
-        ILog.__init__(self, header="MESSAGER", **kwargs)
+        ILog.__init__(self, header="MESSAGER", profile=profile, **kwargs)
         self.profile = profile
         self.dossier_id = dossier_id
         self.instructeur_id = profile.get_instructeur_id()
         self.kwargs = kwargs
 
     def send(self, mess : str):
-        self.request = RequestBuilder(self.profile, './query/send_message.graphql', **self.kwargs)
+        self.request = RequestBuilder(self.profile, './query/send_message.graphql')
         variables = {
                 "dossierId" : self.dossier_id,
                 "instructeurId" : self.instructeur_id,
@@ -32,7 +32,7 @@ class StateChanger(ILog):
     from .connection import Profile
 
     def __init__(self, profile : Profile, dossier, **kwargs):
-        ILog.__init__(self, header="STATECHANGER", **kwargs)
+        ILog.__init__(self, header="STATECHANGER", profile=profile, **kwargs)
 
         if not profile.has_instructeur_id():
             self.error('No instructeur id was provided to the profile, cannot change state.')
@@ -47,7 +47,7 @@ class StateChanger(ILog):
         from .dossier import DossierState
 
 
-        self.request = RequestBuilder(self.profile, './query/actions.graphql', **self.kwargs)
+        self.request = RequestBuilder(self.profile, './query/actions.graphql')
         variables = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
@@ -72,5 +72,5 @@ class StateChanger(ILog):
         if 'errors' in resp.json() and resp.json()['errors'] != None:
             self.error('State not changed : '+resp.json()['errors'][0]['message'])
         else:
-            self.debug('State changed to '+state+' for dossier '+self.dossier.get_id())
+            self.info('State changed to '+state+' for dossier '+self.dossier.get_id())
         return True

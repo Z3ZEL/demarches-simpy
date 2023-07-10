@@ -7,14 +7,14 @@ class Demarche(IData,ILog):
     from .connection import Profile
     def __init__(self, number : int, profile : Profile, **kwargs) :
         # Building the request
-        request = RequestBuilder(profile, './query/demarche.graphql', **kwargs)
+        request = RequestBuilder(profile, './query/demarche.graphql')
         request.add_variable('demarcheNumber', number)
         
         # Call the parent constructor
         self.dossiers = []
-        self.kwargs = kwargs
+
         IData.__init__(self,number, request, profile)
-        ILog.__init__(self, header="DEMARCHE", **kwargs)
+        ILog.__init__(self, header="DEMARCHE", profile=profile, **kwargs)
 
         self.debug('Demarche class class created')
 
@@ -32,7 +32,7 @@ class Demarche(IData,ILog):
             from .dossier import Dossier
             dossiers = []
             for (id,number) in self.get_dossier_infos():
-                dossiers.append(Dossier(number=number, id=id, profile=self.profile, **self.kwargs))
+                dossiers.append(Dossier(number=number, id=id, profile=self.profile))
             self.dossiers = dossiers
         return self.dossiers
 

@@ -32,7 +32,7 @@ class Dossier(IData, ILog):
 
         # Building the request
         from .connection import RequestBuilder
-        request = RequestBuilder(profile, './query/dossier_data.graphql', **kwargs)
+        request = RequestBuilder(profile, './query/dossier_data.graphql')
         request.add_variable('dossierNumber', number)
 
         # Add custom variables
@@ -41,11 +41,10 @@ class Dossier(IData, ILog):
         self.instructeurs = None
         self.anotations = None
         self.profile = profile
-        self.kwargs = kwargs
 
         # Call the parent constructor
         IData.__init__(self,number, request, profile)
-        ILog.__init__(self, header='DOSSIER', **kwargs)
+        ILog.__init__(self, header='DOSSIER', profile=profile, **kwargs)
 
 
         self.debug('Dossier class created')
@@ -62,7 +61,7 @@ class Dossier(IData, ILog):
         return self.get_data()['dossier']['demarche']['id']
     def get_attached_demarche(self) -> Demarche:
         from .demarche import Demarche
-        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self.profile,**self.kwargs)
+        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self.profile)
     def get_attached_instructeurs_info(self):
         if self.instructeurs is None:
             self.request.add_variable('includeInstructeurs', True)

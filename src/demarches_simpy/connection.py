@@ -6,7 +6,7 @@ class Profile(ILog):
     This is tjhe profile class.
     '''
     def __init__(self, api_key : str, instructeur_id : str = None, **kwargs) -> None:
-        super().__init__(header='PROFILE', **kwargs)
+        super().__init__(header='PROFILE', profile=None, **kwargs)
         self.api_key = api_key
         self.instructeur_id = instructeur_id
 
@@ -39,7 +39,7 @@ class RequestBuilder(ILog):
     from requests import Response 
 
     def __init__(self, profile : Profile, graph_ql_query_path : str, **kwargs) -> None:
-        super().__init__(header='REQUEST BUILDER', **kwargs)
+        super().__init__(header='REQUEST BUILDER', profile=profile, **kwargs)
         self.profile = profile
         self.variables = {}
         try:
