@@ -17,7 +17,7 @@ class DemarchesSimpyException(Exception):
     def __str__(self) -> str:
         return f"{bcolors.FAIL} [ERROR] [{self.header}] {super().__str__()}{bcolors.ENDC}"
 
-class ILog(object):
+class ILog():
     def __init__(self, header, profile, **kwargs):
         self.header = header
 

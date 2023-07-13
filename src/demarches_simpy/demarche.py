@@ -4,6 +4,10 @@ from .utils import ILog
 #TODO: Add multiple pages retrieval for dossiers
 #TODO: o<ptimisation for retrieving file
 class Demarche(IData,ILog):
+    '''
+    This class represents a demarche in the demarches-simplifiees.fr API.
+    It is used to retrieve and modify the data of a demarche.
+    '''
     from .connection import Profile
     def __init__(self, number : int, profile : Profile, **kwargs) :
         # Building the request

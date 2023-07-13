@@ -1,5 +1,6 @@
 from pathlib import Path
 from .utils import ILog, DemarchesSimpyException
+from requests import Response 
 
 class Profile(ILog):
     '''
@@ -36,7 +37,6 @@ class RequestBuilder(ILog):
     '''
     This is the request builder class.
     '''
-    from requests import Response 
 
     def __init__(self, profile : Profile, graph_ql_query_path : str, **kwargs) -> None:
         super().__init__(header='REQUEST BUILDER', profile=profile, **kwargs)

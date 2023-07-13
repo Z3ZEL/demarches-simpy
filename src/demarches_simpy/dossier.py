@@ -1,7 +1,11 @@
 from .data_interface import IData
 from .utils import ILog
-
+from .connection import Profile
+from .demarche import Demarche
 class DossierState:
+    '''
+    This class represents the state of a dossier in the demarches-simplifiees.fr API.
+    '''
     ARCHIVE = "Archiver"
     CONSTRUCTION = "EnConstruction"
     INSTRUCTION = "EnInstruction"
@@ -47,8 +51,7 @@ class Dossier(IData, ILog):
 
     
     '''
-    from .connection import Profile
-    from .demarche import Demarche
+
     def __init__(self, number : int, profile : Profile, id : str = None, **kwargs) :
 
         # Building the request
