@@ -56,18 +56,23 @@ class Dossier(IData, ILog):
 
         # Building the request
         from .connection import RequestBuilder
-        request = RequestBuilder(profile, './query/dossier_data.graphql')
+        if 'request' in kwargs:
+            request = kwargs['request']
+        else:
+            request = RequestBuilder(profile, './query/dossier_data.graphql')
+        
         request.add_variable('dossierNumber', number)
 
         # Add custom variables
         self.id = id
+        self.number = number
         self.fields = None
         self.instructeurs = None
         self.anotations = None
         self.profile = profile
 
         # Call the parent constructor
-        IData.__init__(self,number, request, profile)
+        IData.__init__(self, request, profile)
         ILog.__init__(self, header='DOSSIER', profile=profile, **kwargs)
 
 
@@ -76,6 +81,16 @@ class Dossier(IData, ILog):
         if not self.profile.has_instructeur_id():
             self.warning('No instructeur id was provided to the profile, some features will be missing.')
 
+    def get_id(self) -> str:
+        if self.id is None:
+            return self.get_data()['dossier']['id']
+        else:
+            return self.id
+    def get_number(self) -> int:
+        if self.number is None:
+            return self.get_data()['dossier']['number']
+        else:
+            return self.number
 
         
 
@@ -113,7 +128,7 @@ class Dossier(IData, ILog):
         return self.anotations
      
     def __str__(self) -> str:
-        return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + ' (' + str(self.get_data()['dossier']['usager']['email']) + ')'
+        return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + '(' + str(self.get_data()['dossier']['usager']['email']) + ')'
 
 
 

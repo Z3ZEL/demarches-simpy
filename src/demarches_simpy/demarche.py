@@ -9,19 +9,25 @@ class Demarche(IData,ILog):
     It is used to retrieve and modify the data of a demarche.
     '''
     from .connection import Profile
-    def __init__(self, number : int, profile : Profile, **kwargs) :
+    def __init__(self, number : int, profile : Profile, id : str = None,**kwargs) :
         # Building the request
         request = RequestBuilder(profile, './query/demarche.graphql')
         request.add_variable('demarcheNumber', number)
         
         # Call the parent constructor
+        self.id = id
+        self.number = number
         self.dossiers = []
 
-        IData.__init__(self,number, request, profile)
+        IData.__init__(self, request, profile)
         ILog.__init__(self, header="DEMARCHE", profile=profile, **kwargs)
 
         self.debug('Demarche class class created')
 
+    def get_id(self) -> str:
+        return self.id
+    def get_number(self) -> int:
+        return self.number
       
     def get_dossier_infos(self) -> list:
         ids = []

@@ -1,8 +1,7 @@
 from .utils import bcolors, ILog, DemarchesSimpyException
 class IData(ILog):
     from .connection import Profile, RequestBuilder
-    def __init__(self, number, request : RequestBuilder, profile : Profile, **kwargs) -> None:
-        self.number = number
+    def __init__(self, request : RequestBuilder, profile : Profile, **kwargs) -> None:
         self.profile = profile
         self.has_been_fetched = False
         self.data = None
@@ -28,4 +27,6 @@ class IData(ILog):
         return self
 
     def get_id(self) -> str:
-        return self.id
+        pass
+    def get_number(self) -> int:
+        pass
