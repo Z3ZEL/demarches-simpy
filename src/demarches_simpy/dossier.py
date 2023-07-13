@@ -25,6 +25,28 @@ class DossierState:
 
 
 class Dossier(IData, ILog):
+    '''
+    This class represents a dossier in the demarches-simplifiees.fr API.
+    It is used to retrieve and modify the data of a dossier.
+
+    Attributes
+    ----------
+
+    id : str
+        The id of the dossier
+    number : int
+        The number of the dossier
+    profile : Profile
+        The profile used to connect to the API
+    fields : dict
+        The fields of the dossier as a dict of {field_id : field_value}
+    anotations : dict
+        The annotations of the dossier as a dict of {annotation_id : annotation_value}
+    instructeurs : dict
+        The instructeurs of the dossier as a dict of {instructeur_id : instructeur_value}
+
+    
+    '''
     from .connection import Profile
     from .demarche import Demarche
     def __init__(self, number : int, profile : Profile, id : str = None, **kwargs) :
