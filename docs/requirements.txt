@@ -1,1 +1,2 @@
 sphinxawesome-theme
+sphinx-autodoc-typehints
