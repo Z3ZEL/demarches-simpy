@@ -68,7 +68,7 @@ class Dossier(IData, ILog):
         self.number = number
         self.fields = None
         self.instructeurs = None
-        self.anotations = None
+        self.annotations = None
         self.profile = profile
 
         # Call the parent constructor
@@ -93,7 +93,7 @@ class Dossier(IData, ILog):
             return self.number
 
         
-
+    
     def get_dossier_state(self) -> dict:
         return self.get_data()['dossier']['state']
     def get_attached_demarche_id(self) -> str:
@@ -106,7 +106,16 @@ class Dossier(IData, ILog):
             self.request.add_variable('includeInstructeurs', True)
             self.instructeurs = self.force_fetch().get_data()['dossier']['instructeurs']
         return self.instructeurs
+    def get_pdf_url(self) -> str:
+        '''Returns the url of the pdf of the dossier
+
+        Returns
+        -------
+        str
+            The url of the pdf of the dossier
     
+        '''
+        return self.get_data()['dossier']['pdf']['url']
     #Champs retrieve
     def get_fields(self) -> dict:
         '''Returns the fields of the dossier as a dict of {field_id : field_value}'''
@@ -118,14 +127,14 @@ class Dossier(IData, ILog):
         return fields
 
     #Annotations retrieve
-    def get_anotations(self) -> list:
+    def get_annotations(self) -> list[dict[str, dict]]:
         '''Returns the annotations of the dossier as a list of {annotation_id : annotation_value}'''
-        if self.anotations is None:
+        if self.annotations is None:
             self.request.add_variable('includeAnotations', True)
             raw_annotations = self.force_fetch().get_data()['dossier']['annotations']
             anotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
-            self.anotations = anotations
-        return self.anotations
+            self.annotations = anotations
+        return self.annotations
      
     def __str__(self) -> str:
         return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + '(' + str(self.get_data()['dossier']['usager']['email']) + ')'

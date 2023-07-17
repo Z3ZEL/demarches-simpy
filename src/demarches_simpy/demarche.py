@@ -1,6 +1,16 @@
+from __future__ import annotations
+
 from .data_interface import IData
 from .connection import RequestBuilder
 from .utils import ILog
+
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .connection import Profile
+    from .dossier import Dossier
+
 #TODO: Add multiple pages retrieval for dossiers
 #TODO: o<ptimisation for retrieving file
 class Demarche(IData,ILog):
@@ -8,7 +18,6 @@ class Demarche(IData,ILog):
     This class represents a demarche in the demarches-simplifiees.fr API.
     It is used to retrieve and modify the data of a demarche.
     '''
-    from .connection import Profile
     def __init__(self, number : int, profile : Profile, id : str = None,**kwargs) :
         # Building the request
         request = RequestBuilder(profile, './query/demarche.graphql')
@@ -37,7 +46,7 @@ class Demarche(IData,ILog):
     def get_dossiers_count(self) -> int:
         return len(self.get_dossier_infos())
     
-    def get_dossiers(self) -> list:
+    def get_dossiers(self) -> list[Dossier]:
         if len(self.dossiers) == 0 or self.get_dossiers_count() != len(self.dossiers):
             from .dossier import Dossier
             dossiers = []

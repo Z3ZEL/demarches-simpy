@@ -1,4 +1,4 @@
-name: Demarche Simpy
+name: Demarche Simpy Tests
 on: [push]
 jobs:
   tst:

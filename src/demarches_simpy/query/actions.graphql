@@ -63,3 +63,12 @@ mutation dossierRepasserEnConstruction($input: DossierRepasserEnConstructionInpu
     }
   }
 }
+
+mutation dossierModifierAnnotationText($input: DossierModifierAnnotationTextInput!)
+{
+  dossierModifierAnnotationText(input: $input) {
+    errors {
+      message
+    }
+  }
+}

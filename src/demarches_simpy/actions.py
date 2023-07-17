@@ -14,6 +14,7 @@ from .dossier import DossierState, Dossier
 #######################
 
 # TODO: Add an interface action which implement a regular perform action method
+# TODO: Annotation : implement general annotation modifier to modify any annotation checkbox, text, etc...
 
 class MessageSender(ILog):
     def __init__(self, profile : Profile, dossier : Dossier, instructeur_id = None, **kwargs):
@@ -48,9 +49,88 @@ class MessageSender(ILog):
         self.info('Message sent to '+self.dossier.get_id())
         return True
     
+class AnnotationModifier(ILog):
+    '''
+        Class to modify anotation of a dossier
+
+        Parameters
+        ----------
+        profile : Profile
+            The profile to use to perform the action
+        dossier : Dossier
+            The dossier to modify
+        instructeur_id : str
+            The instructeur id to use to perform the action, if not provided, the profile instructeur id will be used
+
+    '''
+    def __init__(self, profile : Profile, dossier : Dossier, instructeur_id = None, **kwargs):
+        super().__init__(header="ANOTATION MODIFIER", profile=profile, **kwargs)
+
+        if not profile.has_instructeur_id() and instructeur_id == None:
+            self.error('No instructeur id was provided to the profile, cannot modify anotation.')
+
+        self.profile = profile
+        self.dossier = dossier
+        self.instructeur_id = profile.get_instructeur_id() if instructeur_id == None else instructeur_id
+
+        # Create RequestBuilder
+        try:
+            self.request = RequestBuilder(self.profile, './query/actions.graphql')
+        except DemarchesSimpyException as e:
+            self.error('Error during creating request : '+ e.message)
+        
+        self.input = {
+                "dossierId" : self.dossier.get_id(),
+                "instructeurId" : self.instructeur_id,
+        }
+
+    def set_annotation(self, anotation : dict[str, str], value : str = None):
+        '''
+            Set anotation to the dossier
+            anotation : dict[str, str]
+            {
+                "id" : "123",
+                "stringValue" : "foo"
+            }
+
+            Parameters
+            ----------
+            anotation : dict[str, str]
+                Anotation to set
+
+            Returns
+            -------
+            bool
+                True if anotation was set, False otherwise
+        '''
+        #Check if anotation is valid
+        if not 'id' in anotation or (not 'stringValue' in anotation and value == None):
+            self.error('Invalid anotation provided : '+str(anotation))
+
+        self.input['annotationId'] = anotation['id'] 
+        self.input['value'] = anotation['stringValue'] if value == None else value
 
 
-class StateChanger(ILog):
+        self.request.add_variable('input',self.input)
+
+        custom_body = {
+            "query": self.request.get_query(),
+            "operationName": "dossierModifierAnnotationText",
+            "variables": self.request.get_variables()
+        }
+
+        try:
+            resp = self.request.send_request(custom_body)
+        except DemarchesSimpyException as e:
+            self.warning('Anotation not set : '+e.message)
+            return False
+        self.info('Anotation set to '+self.dossier.get_id())
+        return True
+
+
+
+
+class StateModifier(ILog):
 
     def __init__(self, profile : Profile, dossier : Dossier, instructeur_id=None, **kwargs):
         ILog.__init__(self, header="STATECHANGER", profile=profile, **kwargs)
@@ -68,7 +148,7 @@ class StateChanger(ILog):
             self.request = RequestBuilder(self.profile, './query/actions.graphql')
         except DemarchesSimpyException as e:
             self.error('Error during creating request : '+ e.message)
-        self.variables = {
+        self.input = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
         }
@@ -77,9 +157,9 @@ class StateChanger(ILog):
     def change_state(self, state,msg=""):
 
         if state == DossierState.ACCEPTER or state == DossierState.REFUSER or state == DossierState.SANS_SUITE:
-            self.variables['motivation'] = msg
+            self.input['motivation'] = msg
 
-        self.request.add_variable('input',self.variables)
+        self.request.add_variable('input',self.input)
         operation_name = "dossier"
         operation_name += ("Passer" if state == DossierState.INSTRUCTION else "")
         operation_name += ("Repasser" if state == DossierState.CONSTRUCTION else "")

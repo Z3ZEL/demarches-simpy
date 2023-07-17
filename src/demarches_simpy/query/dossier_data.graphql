@@ -7,6 +7,10 @@ query getDossier($dossierNumber: Int!, $includeChamps : Boolean = false, $includ
             filename
             url
         }
+        pdf {
+            filename
+            url
+        }
         usager{
             email
         }
