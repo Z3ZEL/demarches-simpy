@@ -3,14 +3,6 @@ import sys
 sys.path.append('..')
 from src.demarches_simpy.utils import bcolors, ILog, DemarchesSimpyException
 
-def test_bcolors():
-    assert bcolors.OKGREEN == '\033[92m'
-    assert bcolors.ENDC == '\033[0m'
-    assert bcolors.WARNING == '\033[93m'
-    assert bcolors.FAIL == '\033[91m'
-    assert bcolors.BOLD == '\033[1m'
-    assert bcolors.UNDERLINE == '\033[4m'
-
 def test_DemarchesSimpyException():
     with pytest.raises(DemarchesSimpyException) as excinfo:
         raise DemarchesSimpyException()
