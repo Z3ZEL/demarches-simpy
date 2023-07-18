@@ -34,6 +34,8 @@ class Demarche(IData,ILog):
         self.debug('Demarche class class created')
 
     def get_id(self) -> str:
+        if self.id is None:
+            self.id = self.get_data()['demarche']['id']
         return self.id
     def get_number(self) -> int:
         return self.number
@@ -80,5 +82,5 @@ class Demarche(IData,ILog):
         ''''''
 
     def __str__(self) -> str:
-        return str("Id : "+self.get_data()['demarche']['id']) + ' Number : ' + str(self.get_data()['demarche']['number'])
+        return str(f"----- {self.get_data()['demarche']['title']} -----\n"+"Id : "+self.get_data()['demarche']['id']) + '\nNumber : ' + str(self.get_data()['demarche']['number'])+"\n"
 
