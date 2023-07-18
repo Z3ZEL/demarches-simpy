@@ -7,7 +7,13 @@ from src.demarches_simpy import Demarche, Profile
 
 load_dotenv()
 
-API_DS_KEY = getenv("API_DS_KEY", "None")
+API_DS_KEY = getenv("API_DS_KEY", False)
+if not API_DS_KEY:
+    #CHECK FOR GITHUB_ENV
+    env_file = getenv('GITHUB_ENV',False)
+    if env_file:
+        with open(env_file, "r") as env_file:
+            print(env_file.read())
 print(API_DS_KEY)
 
 
