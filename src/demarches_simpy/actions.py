@@ -1,7 +1,9 @@
 from .connection import RequestBuilder, Profile
 from .utils import ILog, DemarchesSimpyException
 from .dossier import DossierState, Dossier
-
+from pathlib import Path
+import os;
+import hashlib
 #######################
 #       ACTIONS       #
 # action -> dossier   #
@@ -34,11 +36,12 @@ class MessageSender(ILog):
             self.error('Error during creating request : '+ e.message)
 
 
-    def send(self, mess : str):
+    def send(self, mess : str, attachement_id: str = None):
         variables = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
-                "body" : mess
+                "body" : mess,
+                "attachment" : attachement_id
         }
         self.request.add_variable('input',variables)
         try:
@@ -126,6 +129,53 @@ class AnnotationModifier(ILog):
             return False
         self.info('Anotation set to '+self.dossier.get_id())
         return True
+
+
+class FileUploader(ILog):
+    def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
+        super().__init__(header="FILE UPLOADER", profile=profile, **kwargs)
+
+        self.profile = profile
+        self.dossier = dossier
+
+        # Create RequestBuilder
+        try:
+            self.request = RequestBuilder(self.profile, './query/actions.graphql')
+        except DemarchesSimpyException as e:
+            self.error('Error during creating request : '+ e.message)
+
+        self.input = {
+            "dossierId": self.dossier.get_id(),
+        }
+
+    def upload_file(self, file_path: str, file_name: str, file_type: str="application/pdf"):
+        self.input['filename'] = file_name
+        self.input['contentType'] = file_type
+
+        # path = Path(__file__).parent.absolute()
+        # file_path = os.path.join(path, file_path)
+
+
+        with open(file_path, 'rb') as f:
+            self.input['byteSize'] = os.path.getsize(file_path)
+            self.input['checksum'] = hashlib.md5(f.read()).hexdigest()
+        
+        self.request.add_variable('input', self.input)
+
+        custom_body = {
+            "query": self.request.get_query(),
+            "operationName": "createDirectUpload",
+            "variables": self.request.get_variables()
+        }
+
+        try:
+            resp = self.request.send_request(custom_body,file={'file_path': file_path, 'file_type' : file_type})
+        except DemarchesSimpyException as e:
+            self.warning('File not uploaded : '+e.message)
+            return False
+        self.info('File uploaded to '+self.dossier.get_id())
+        return resp.json()['data']['createDirectUpload']['directUpload']['signedBlobId']
+
 
 
 

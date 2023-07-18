@@ -72,3 +72,14 @@ mutation dossierModifierAnnotationText($input: DossierModifierAnnotationTextInpu
     }
   }
 }
+mutation createDirectUpload($input: CreateDirectUploadInput!)
+{
+  createDirectUpload(input: $input){
+    directUpload{
+      url
+      blobId
+      signedBlobId
+      headers
+    }
+  }
+}
