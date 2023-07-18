@@ -1,8 +1,12 @@
 name: Demarche Simpy Tests
-on: [push]
+on:
+  push:
+    branches:
+      - master
 jobs:
   tst:
     runs-on: ubuntu-latest
+    environment: test-env
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
