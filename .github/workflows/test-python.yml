@@ -3,8 +3,9 @@ on:
   push:
     branches:
       - master
-    tags:
-      - "t.*.*"
+    paths:
+      - 'tests/**'
+      - 'src/demarches_simpy/**'
 jobs:
   tst:
     runs-on: ubuntu-latest
