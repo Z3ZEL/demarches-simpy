@@ -4,7 +4,7 @@ on:
     branches:
       - master
     tags:
-      - "last-test"
+      - "t.*.*"
 jobs:
   tst:
     runs-on: ubuntu-latest
