@@ -45,3 +45,6 @@ class TestDemarcheNoError():
         number = demarche.get_number()
         assert id in str_demarche
         assert str(number) in str_demarche
+
+    def test_dossier_info(self, demarche : Demarche):
+       assert len(demarche.get_dossier_infos()) == 1
