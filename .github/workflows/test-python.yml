@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - master
-
+    tags:
+      - "last-test"
 jobs:
   tst:
     runs-on: ubuntu-latest
