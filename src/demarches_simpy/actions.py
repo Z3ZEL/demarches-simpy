@@ -87,16 +87,15 @@ class AnnotationModifier(ILog):
     def set_annotation(self, anotation : dict[str, str], value : str = None):
         '''
             Set anotation to the dossier
-            anotation : dict[str, str]
-            {
-                "id" : "123",
-                "stringValue" : "foo"
-            }
 
             Parameters
             ----------
             anotation : dict[str, str]
-                Anotation to set
+                The anotation to set, must be a valid anotation (id and stringValue)
+            value : str
+                The value to set to the anotation, if not provided, the anotation will be set to its default value
+
+     
 
             Returns
             -------

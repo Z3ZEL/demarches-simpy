@@ -1,21 +1,11 @@
 demarches\_simpy package
 ========================
-
-Submodules
-----------
-
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
-   demarches_simpy.actions
-   demarches_simpy.connection
-   demarches_simpy.data_interface
-   demarches_simpy.demarche
-   demarches_simpy.dossier
-   demarches_simpy.utils
-
-Module contents
----------------
-
-.. automodule:: demarches_simpy
-   :members:
+   Actions<demarches_simpy.actions>
+   Connection Interfaces<demarches_simpy.connection>
+   Data Interface<demarches_simpy.data_interface>
+   Demarche<demarches_simpy.demarche>
+   Dossier<demarches_simpy.dossier>
+   Miscs<demarches_simpy.utils>
