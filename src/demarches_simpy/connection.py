@@ -3,8 +3,10 @@ from .utils import ILog, DemarchesSimpyException
 from requests import Response 
 
 class Profile(ILog):
-    '''
-    This is tjhe profile class.
+    r'''
+    The profile class handling connection information and can allow you to pass configuration parameters and diffuse it to all object using this profile
+
+    - Exemple : Passing the args verbose=True will activate the verbose to all object using this profile instance.
     '''
     def __init__(self, api_key : str, instructeur_id : str = None, **kwargs) -> None:
         super().__init__(header='PROFILE', profile=None, **kwargs)
@@ -16,15 +18,46 @@ class Profile(ILog):
 
     ## GETTERS
     def get_api_key(self) -> str:
+        r'''
+        Returns
+        -------
+            The démarches simplifiées api key
+        '''
         return self.api_key
 
     def get_instructeur_id(self) -> str:
+        r'''
+        Returns
+        -------
+        str 
+            the unique id of the associated instructeur using this profile
+        None
+            if the instructeur id is not provided
+        '''
         return self.instructeur_id
     
     def has_instructeur_id(self) -> bool:
+        r'''
+        Returns
+        -------
+        True
+            if an instructeur id was provided
+        False
+            otherwise
+
+        '''
         return self.instructeur_id != None
     
     def set_instructeur_id(self, instructeur_id : str) -> None:
+        r'''
+        Assign a unique instructeur id
+
+        Parameters
+        ----------
+        instructeur_id : str
+            the unique instructeur id
+        
+        '''
         self.instructeur_id = instructeur_id
     
     def get_url(self) -> str:
@@ -34,8 +67,8 @@ class Profile(ILog):
 
 
 class RequestBuilder(ILog):
-    '''
-    This is the request builder class.
+    r'''
+    Internal class handling request and fetching data from démarches simplifiées, you won't have to use (except for dev)
     '''
 
     def __init__(self, profile : Profile, graph_ql_query_path : str, **kwargs) -> None:

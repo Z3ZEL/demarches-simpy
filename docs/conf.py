@@ -20,6 +20,7 @@ release = '0.0.5'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [ 
+    "sphinx.ext.napoleon",  
     'sphinx.ext.autodoc',  # Core Sphinx library for auto html doc generation from docstrings
     'sphinx.ext.autosummary',  # Create neat summary tables for modules/classes/methods etc
     'sphinx.ext.intersphinx',  # Link to other project's documentation (see mapping below)

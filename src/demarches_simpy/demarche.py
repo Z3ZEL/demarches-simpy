@@ -17,6 +17,8 @@ class Demarche(IData,ILog):
     '''
     This class represents a demarche in the demarches-simplifiees.fr API.
     It is used to retrieve and modify the data of a demarche.
+
+    - Log header : DEMARCHE
     '''
     def __init__(self, number : int, profile : Profile, id : str = None,**kwargs) :
         # Building the request
@@ -34,21 +36,63 @@ class Demarche(IData,ILog):
         self.debug('Demarche class class created')
 
     def get_id(self) -> str:
+        r'''
+        Returns
+        -------
+            The unique id associated to the demarche
+        '''
         if self.id is None:
             self.id = self.get_data()['demarche']['id']
         return self.id
     def get_number(self) -> int:
+        r'''
+        Returns
+        -------
+            THe unique number associated to the demarche
+        '''
         return self.number
       
     def get_dossier_infos(self) -> list:
+        r'''
+            Get a list of minimum info about all dossiers, allows you to quickly retrieved all dossier without all their data
+
+            Returns
+            -------
+                A list of tuple containing id and number of each dossier.
+
+                .. highlight:: python
+                .. code-block:: python
+                    
+                    [
+                        ('uuid-1234-1234',1234567),
+                        (...,...)
+                    ]
+                
+        '''
         ids = []
         for node in self.get_data()['demarche']['dossiers']['nodes']:
             ids.append((node['id'], node['number']))
         return ids
     def get_dossiers_count(self) -> int:
+        r'''
+        Returns
+        -------
+            The total dossier count
+        '''
         return len(self.get_dossier_infos())
     
     def get_dossiers(self) -> list[Dossier]:
+        r'''
+            Get all dossier objects
+
+            Returns
+            -------
+                A list of all dossiers
+
+            Notes
+            -----
+                A bit heavy, prefer using get_dossier_infos(). A pagination system is coming.
+        '''
         if len(self.dossiers) == 0 or self.get_dossiers_count() != len(self.dossiers):
             from .dossier import Dossier
             dossiers = []
