@@ -77,7 +77,8 @@ class ILog():
 
 class IAction(ILog):
     SUCCESS = 0
-    ERROR = 1
+    NETWORK_ERROR = 1
+    REQUEST_ERROR = 2
 
     def __init__(self, profile : Profile, dossier : Dossier, **kwargs) -> None:
         r'''
