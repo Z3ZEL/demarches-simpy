@@ -1,6 +1,6 @@
 from pathlib import Path
-from .utils import ILog, DemarchesSimpyException
 from requests import Response 
+from .interfaces import ILog
 
 class Profile(ILog):
     r'''

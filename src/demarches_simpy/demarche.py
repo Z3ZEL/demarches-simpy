@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from .data_interface import IData
+from .interfaces import IData, ILog
 from .connection import RequestBuilder
-from .utils import ILog
 
 from typing import TYPE_CHECKING
 

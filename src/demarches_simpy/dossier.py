@@ -1,5 +1,4 @@
-from .data_interface import IData
-from .utils import ILog
+from .interfaces import IData, ILog
 from .connection import Profile
 from .demarche import Demarche
 class DossierState:
