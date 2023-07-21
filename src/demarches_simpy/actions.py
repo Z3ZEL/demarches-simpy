@@ -63,7 +63,7 @@ class MessageSender(IAction, ILog):
             self.request.send_request()
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
-            return IAction.ERROR
+            return IAction.NETWORK_ERROR
         self.info('Message sent to '+self.dossier.get_id())
         return IAction.SUCCESS
     
@@ -151,7 +151,7 @@ class AnnotationModifier(IAction, ILog):
             self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('Anotation not set : '+e.message)
-            return IAction.ERROR
+            return IAction.NETWORK_ERROR
         self.info('Anotation set to '+self.dossier.get_id())
         return IAction.SUCCESS
 
@@ -204,7 +204,8 @@ class StateModifier(IAction, ILog):
 
         self.request.add_variable('input',self.input)
         operation_name = "dossier"
-        operation_name += ("Passer" if state == DossierState.INSTRUCTION else "")
+        operation_name += ("Passer" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() == 'en_construction') else "")
+        operation_name += ("Repasser" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() != 'en_construction') else "")
         operation_name += ("Repasser" if state == DossierState.CONSTRUCTION else "")
         operation_name += state
 
@@ -215,9 +216,12 @@ class StateModifier(IAction, ILog):
             "variables" : self.request.get_variables()
         }
         try:
-            self.request.send_request(custom_body)
+            resp = self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('State not changed : '+e.message)
-            return IAction.ERROR
+            return IAction.NETWORK_ERROR
+        if resp.json()['data'][operation_name]['errors'] != None:
+            self.warning('State not changed : '+resp.json()['data'][operation_name]['errors'][0]['message'])
+            return IAction.REQUEST_ERROR
         self.info('State changed to '+state+' for '+self.dossier.get_id())
         return IAction.SUCCESS

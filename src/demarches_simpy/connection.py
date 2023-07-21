@@ -113,7 +113,7 @@ class RequestBuilder(ILog):
             json = self.__get_body__() if custom_body == None else custom_body,
             headers = self.__get_header__()
         )
-        if 'errors' in resp.json() and resp.json()['errors'] != None:
+        if 'errors' in resp.json() and resp.json()['errors'] != None: 
             self.error('Message not sent : '+resp.json()['errors'][0]['message'])
         else:
             return resp
