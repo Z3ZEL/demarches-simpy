@@ -230,7 +230,8 @@ class StateModifier(ILog):
 
         self.request.add_variable('input',self.input)
         operation_name = "dossier"
-        operation_name += ("Passer" if state == DossierState.INSTRUCTION else "")
+        operation_name += ("Passer" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() == 'en_construction') else "")
+        operation_name += ("Repasser" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() != 'en_construction') else "")
         operation_name += ("Repasser" if state == DossierState.CONSTRUCTION else "")
         operation_name += state
 
@@ -244,6 +245,9 @@ class StateModifier(ILog):
             resp = self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('State not changed : '+e.message)
+            return False
+        if resp.json()['data'][operation_name]['errors'] != None:
+            self.warning('State not changed : '+resp.json()['data'][operation_name]['errors'][0]['message'])
             return False
         self.info('State changed to '+state+' for '+self.dossier.get_id())
         return True
