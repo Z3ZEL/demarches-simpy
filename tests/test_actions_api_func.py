@@ -18,7 +18,7 @@ demarche = Demarche(78680, profile)
 class TestActionStateModifier():
     def reset_state(self, dossier : Dossier, state_modifier : StateModifier):
         state_modifier = StateModifier(profile=profile, dossier=dossier)
-        state_modifier.change_state(DossierState.INSTRUCTION)
+        state_modifier.perform(DossierState.INSTRUCTION)
         assert dossier.force_fetch().get_dossier_state() == 'en_instruction'
 
 
@@ -36,7 +36,7 @@ class TestActionStateModifier():
     def test_state_modifier_with_no_error(self, dossier : Dossier, state_modifier : StateModifier):
         self.reset_state(dossier, state_modifier)
         assert dossier.get_dossier_state() == 'en_instruction'
-        state_modifier.change_state(DossierState.ACCEPTER)
+        assert state_modifier.perform(DossierState.ACCEPTER) == 0
         assert dossier.force_fetch().get_dossier_state() == 'accepte'
         self.reset_state(dossier, state_modifier)
 
@@ -53,13 +53,13 @@ class TestActionMessageModifier():
         return MessageSender(profile=profile, dossier=dossier)
     
     def test_message_sender_with_no_error(self, dossier : Dossier, sender : MessageSender):
-        assert sender.send("Test message") == True
+        assert sender.perform("Test message") == 0
 
 class TestActionAnnotationModifier():
     def reset_annotation(self, dossier: Dossier, annotation_modifier: AnnotationModifier):
         annotation = dossier.get_annotations()['test-field-1']
         annotation['stringValues'] = ''
-        annotation_modifier.set_annotation(annotation)
+        annotation_modifier.perform(annotation)
         assert dossier.force_fetch().get_annotations()['test-field-1']['stringValues'] == ''
     @pytest.fixture
     def dossier(self) -> Dossier:
@@ -75,6 +75,6 @@ class TestActionAnnotationModifier():
         self.reset_annotation(dossier, annotation_modifier)
         annotation = dossier.get_annotations()['test-field-1']
         annotation['stringValues'] = 'test'
-        assert annotation_modifier.set_annotation(annotation) == True
+        assert annotation_modifier.perform(annotation) == 0
         assert dossier.force_fetch().get_annotations()['test-field-1']['stringValues'] == 'test'
         self.reset_annotation(dossier, annotation_modifier)

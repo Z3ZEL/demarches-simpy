@@ -103,11 +103,13 @@ class IAction(ILog):
 
         self.query_path = './query/actions.graphql'
 
+        self.__instructeur_id = None
         if not 'no_instructeur_id' in kwargs:
             if not profile.has_instructeur_id() and not 'instructeur_id' in kwargs:
                 self.error('No instructeur id was provided to the profile, cannot send message.')
-            
-            self.instructeur_id = profile.get_instructeur_id() if not 'instructeur_id' in kwargs else kwargs['instructeur_id']
+            if 'instructeur_id' in kwargs:
+                self.__instructeur_id = kwargs['instructeur_id']
+           
 
 
         if 'query_path' in kwargs:
@@ -121,7 +123,15 @@ class IAction(ILog):
             self.request = RequestBuilder(self.profile, self.query_path)
         except DemarchesSimpyException as e:
             self.error('Error during creating request : '+ e.message)
-
+    
+    @property
+    def instructeur_id(self):
+        if self.profile.has_instructeur_id():
+            return self.profile.get_instructeur_id()
+        elif self.__instructeur_id != None:
+            return self.__instructeur_id
+        else:
+            self.error('No instructeur id was provided to the profile, cannot send message.')
 
     def perform(self) -> int:
         r'''

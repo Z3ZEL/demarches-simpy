@@ -1,7 +1,7 @@
 import pytest
 import sys
 sys.path.append('..')
-from src.demarches_simpy.utils import bcolors, ILog, DemarchesSimpyException
+from src.demarches_simpy.utils import bcolors, DemarchesSimpyException
 
 def test_DemarchesSimpyException():
     with pytest.raises(DemarchesSimpyException) as excinfo:
