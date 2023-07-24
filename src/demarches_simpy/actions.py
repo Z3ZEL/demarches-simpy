@@ -1,6 +1,7 @@
 from .connection import RequestBuilder, Profile
-from .utils import ILog, DemarchesSimpyException
+from .utils import DemarchesSimpyException
 from .dossier import DossierState, Dossier
+from .interfaces import IAction, ILog
 from pathlib import Path
 import os;
 import hashlib
@@ -18,25 +19,42 @@ import hashlib
 # TODO: Add an interface action which implement a regular perform action method
 # TODO: Annotation : implement general annotation modifier to modify any annotation checkbox, text, etc...
 
-class MessageSender(ILog):
+class MessageSender(IAction, ILog):
+    r'''
+        Class to send message to a dossier
+    '''
     def __init__(self, profile : Profile, dossier : Dossier, instructeur_id = None, **kwargs):
+        r'''
+            Parameters
+            ----------
+            profile : Profile
+                The profile to use to perform the action
+            dossier : Dossier
+                The dossier to send message to
+            instructeur_id : str, optional
+                The instructeur id to use to perform the action, if not provided, the profile instructeur id will be used
+
+        '''
         ILog.__init__(self, header="MESSAGE_SENDER", profile=profile, **kwargs)
+        IAction.__init__(self, profile, dossier, query_path='./query/send_message.graphql', instructeur_id=instructeur_id)
 
-        if not profile.has_instructeur_id() and instructeur_id == None:
-            self.error('No instructeur id was provided to the profile, cannot send message.')
+    def perform(self, mess : str) -> bool:
+        r'''
+            Send a message to the dossier
+            
+            Parameters
+            ----------
+            mess : str
+                The message to send
 
-        self.profile = profile
-        self.dossier = dossier
-        self.instructeur_id = profile.get_instructeur_id() if instructeur_id == None else instructeur_id
+            Returns
+            -------
+            SUCCESS
+                if message was sent
+            ERROR
+                otherwise
 
-        # Create RequestBuilder
-        try:
-            self.request = RequestBuilder(self.profile, './query/send_message.graphql')
-        except DemarchesSimpyException as e:
-            self.error('Error during creating request : '+ e.message)
-
-
-    def send(self, mess : str, attachement_id: str = None):
+        '''
         variables = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
@@ -45,14 +63,14 @@ class MessageSender(ILog):
         }
         self.request.add_variable('input',variables)
         try:
-            resp = self.request.send_request()
+            self.request.send_request()
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
-            return False
+            return IAction.NETWORK_ERROR
         self.info('Message sent to '+self.dossier.get_id())
-        return True
+        return IAction.SUCCESS
     
-class AnnotationModifier(ILog):
+class AnnotationModifier(IAction, ILog):
     '''
         Class to modify anotation of a dossier
 
@@ -67,44 +85,64 @@ class AnnotationModifier(ILog):
 
     '''
     def __init__(self, profile : Profile, dossier : Dossier, instructeur_id = None, **kwargs):
-        super().__init__(header="ANOTATION MODIFIER", profile=profile, **kwargs)
+        r'''
+            Parameters
+            ----------
+            profile : Profile
+                The profile to use to perform the action
+            dossier : Dossier
+                The dossier to modify
+            instructeur_id : str, optional
+                The instructeur id to use to perform the action, if not provided, the profile instructeur id will be used
+        '''
+        ILog.__init__(self, header="ANOTATION MODIFIER", profile=profile, **kwargs)
+        IAction.__init__(self, profile, dossier, instructeur_id=instructeur_id)
 
-        if not profile.has_instructeur_id() and instructeur_id == None:
-            self.error('No instructeur id was provided to the profile, cannot modify anotation.')
-
-        self.profile = profile
-        self.dossier = dossier
-        self.instructeur_id = profile.get_instructeur_id() if instructeur_id == None else instructeur_id
-
-        # Create RequestBuilder
-        try:
-            self.request = RequestBuilder(self.profile, './query/actions.graphql')
-        except DemarchesSimpyException as e:
-            self.error('Error during creating request : '+ e.message)
-        
         self.input = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
         }
 
-    def set_annotation(self, anotation : dict[str, str], value : str = None):
-        '''
+    def perform(self, anotation : dict[str, str], value : str = None) -> int:
+        r'''
             Set anotation to the dossier
             anotation : dict[str, str]
-            {
-                "id" : "123",
-                "stringValue" : "foo"
-            }
+                The anotation to set, must be a valid anotation structure:
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "id" : "anotation_id",
+                        "stringValue" : "anotation_value"
+                    }
 
             Parameters
             ----------
             anotation : dict[str, str]
-                Anotation to set
+                The anotation to set, must be a valid anotation structure:
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "id" : "anotation_id",
+                        "stringValue" : "anotation_value"
+                    }
+
+                If the anotation is not valid, the method will return False
+
+            value : str
+                The value to set to the anotation, if not provided, the anotation will be set to its default value
+
+     
 
             Returns
             -------
-            bool
-                True if anotation was set, False otherwise
+            True 
+                if anotation was set
+            False
+                otherwise
         '''
         #Check if anotation is valid
         if not 'id' in anotation or (not 'stringValue' in anotation and value == None):
@@ -123,12 +161,58 @@ class AnnotationModifier(ILog):
         }
 
         try:
-            resp = self.request.send_request(custom_body)
+            self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('Anotation not set : '+e.message)
+            return IAction.NETWORK_ERROR
+        self.info('Anotation set to '+self.dossier.get_id())
+        return IAction.SUCCESS
+
+
+class FileUploader(ILog):
+    def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
+        super().__init__(header="FILE UPLOADER", profile=profile, **kwargs)
+
+        self.profile = profile
+        self.dossier = dossier
+
+        # Create RequestBuilder
+        try:
+            self.request = RequestBuilder(self.profile, './query/actions.graphql')
+        except DemarchesSimpyException as e:
+            self.error('Error during creating request : '+ e.message)
+
+        self.input = {
+            "dossierId": self.dossier.get_id(),
+        }
+
+    def upload_file(self, file_path: str, file_name: str, file_type: str="application/pdf"):
+        self.input['filename'] = file_name
+        self.input['contentType'] = file_type
+
+        # path = Path(__file__).parent.absolute()
+        # file_path = os.path.join(path, file_path)
+
+
+        with open(file_path, 'rb') as f:
+            self.input['byteSize'] = os.path.getsize(file_path)
+            self.input['checksum'] = hashlib.md5(f.read()).hexdigest()
+        
+        self.request.add_variable('input', self.input)
+
+        custom_body = {
+            "query": self.request.get_query(),
+            "operationName": "createDirectUpload",
+            "variables": self.request.get_variables()
+        }
+
+        try:
+            resp = self.request.send_request(custom_body,file={'file_path': file_path, 'file_type' : file_type})
+        except DemarchesSimpyException as e:
+            self.warning('File not uploaded : '+e.message)
             return False
         self.info('Anotation set to '+self.dossier.get_id())
-        return True
+        return IAction.SUCCESS
 
 
 class FileUploader(ILog):
@@ -180,38 +264,54 @@ class FileUploader(ILog):
 
 
 
-class StateModifier(ILog):
+class StateModifier(IAction, ILog):
+    r'''
+        Class to change state of a dossier
+    '''
 
     def __init__(self, profile : Profile, dossier : Dossier, instructeur_id=None, **kwargs):
+        r'''
+            Parameters
+            ----------
+            profile : Profile
+                The profile to use to perform the action
+            dossier : Dossier
+                The dossier to change state
+            instructeur_id : str, optional
+                The instructeur id to use to perform the action, if not provided, the profile instructeur id will be used
+        '''
         ILog.__init__(self, header="STATECHANGER", profile=profile, **kwargs)
+        IAction.__init__(self, profile, dossier, instructeur_id=instructeur_id)
 
         if not profile.has_instructeur_id() and instructeur_id == None:
             self.error('No instructeur id was provided to the profile, cannot change state.')
-            
-
-        self.profile = profile
-        self.dossier = dossier
-        self.instructeur_id = profile.get_instructeur_id() if instructeur_id == None else instructeur_id
-
-        # Create RequestBuilder
-        try:
-            self.request = RequestBuilder(self.profile, './query/actions.graphql')
-        except DemarchesSimpyException as e:
-            self.error('Error during creating request : '+ e.message)
+        
         self.input = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
         }
 
 
-    def change_state(self, state,msg=""):
+    def perform(self, state: DossierState, msg="") -> int:
+        r'''
+            Change the state of the dossier
+
+            Parameters
+            ----------
+            state : DossierState
+                The state to set to the dossier
+            msg : str, optional
+                The message to set to the dossier, if not provided, the message will be set to its default value : ""
+
+        '''
 
         if state == DossierState.ACCEPTER or state == DossierState.REFUSER or state == DossierState.SANS_SUITE:
             self.input['motivation'] = msg
 
         self.request.add_variable('input',self.input)
         operation_name = "dossier"
-        operation_name += ("Passer" if state == DossierState.INSTRUCTION else "")
+        operation_name += ("Passer" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() == 'en_construction') else "")
+        operation_name += ("Repasser" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() != 'en_construction') else "")
         operation_name += ("Repasser" if state == DossierState.CONSTRUCTION else "")
         operation_name += state
 
@@ -225,6 +325,9 @@ class StateModifier(ILog):
             resp = self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('State not changed : '+e.message)
-            return False
+            return IAction.NETWORK_ERROR
+        if resp.json()['data'][operation_name]['errors'] != None:
+            self.warning('State not changed : '+resp.json()['data'][operation_name]['errors'][0]['message'])
+            return IAction.REQUEST_ERROR
         self.info('State changed to '+state+' for '+self.dossier.get_id())
-        return True
+        return IAction.SUCCESS

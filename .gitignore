@@ -59,6 +59,7 @@ internal/
 # Translations
 *.mo
 *.pot
+.vscode
 
 # Django stuff:
 *.log

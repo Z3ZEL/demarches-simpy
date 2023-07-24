@@ -1,10 +1,22 @@
-from .data_interface import IData
-from .utils import ILog
+from .interfaces import IData, ILog
 from .connection import Profile
 from .demarche import Demarche
 class DossierState:
     '''
-    This class represents the state of a dossier in the demarches-simplifiees.fr API.
+    This enum represents the state of a dossier in the demarches-simplifiees.fr API.
+
+    Attributes
+    ----------
+        ARCHIVE 
+            The dossier is archived
+        CONSTRUCTION
+            The dossier is in construction
+        ACCEPTER
+            The dossier is accepted
+        REFUSER
+            The dossier is refused
+        SANS_SUITE
+            The dossier is classified without following
     '''
     ARCHIVE = "Archiver"
     CONSTRUCTION = "EnConstruction"
@@ -29,31 +41,32 @@ class DossierState:
 
 
 class Dossier(IData, ILog):
-    '''
-    This class represents a dossier in the demarches-simplifiees.fr API.
+    r'''This class represents a dossier in the demarches-simplifiees.fr API.
     It is used to retrieve and modify the data of a dossier.
 
-    Attributes
-    ----------
-
-    id : str
-        The id of the dossier
-    number : int
-        The number of the dossier
-    profile : Profile
-        The profile used to connect to the API
-    fields : dict
-        The fields of the dossier as a dict of {field_id : field_value}
-    anotations : dict
-        The annotations of the dossier as a dict of {annotation_id : annotation_value}
-    instructeurs : dict
-        The instructeurs of the dossier as a dict of {instructeur_id : instructeur_value}
-
-    
+    - Log header : DOSSIER
     '''
 
-    def __init__(self, number : int, profile : Profile, id : str = None, **kwargs) :
+    def __init__(self, number : int, profile : Profile, id : str = None, **kwargs):
+        r'''
+        Create manually a dossier
 
+        Parameters
+        ----------
+        number : int
+            the unique associated dossier number needed to identify and fetch the associated dossier.
+        profile : Profile
+            The connection profile
+        id : str , optional
+            the associated unique id
+
+        **kwargs : dict, optional
+            verbose parameter enable verbose
+        
+        Notes
+        -----
+        Currently fetching a dossier is possible only with its unique number, id fetching is not currently supported
+        '''
         # Building the request
         from .connection import RequestBuilder
         if 'request' in kwargs:
@@ -82,23 +95,80 @@ class Dossier(IData, ILog):
             self.warning('No instructeur id was provided to the profile, some features will be missing.')
 
     def get_id(self) -> str:
+        r'''
+        Get the associated unique id of the dossier.
+
+        Returns
+        -------
+            the unique id 
+        '''
         if self.id is None:
             return self.get_data()['dossier']['id']
         else:
             return self.id
     def get_number(self) -> int:
+        r'''
+            Get the associated unique dossier number.
+
+            Returns
+            -------
+                the number of the dossier
+
+        '''
         if self.number is None:
             return self.get_data()['dossier']['number']
         else:
             return self.number
 
         
-    
+    #TODO: check type unified with an enum and make tests
     def get_dossier_state(self) -> dict:
+        r'''
+        Get the dossier current state
+
+        A state can be :
+
+        - en_construction
+
+        - en_instruction
+
+        - accepte
+
+        - refuse
+
+        - sans_suite
+
+        Returns
+        -------
+            The current dossier state
+        '''
         return self.get_data()['dossier']['state']
     def get_attached_demarche_id(self) -> str:
+        r'''
+            Return the associated demarche unique id
+
+            Returns
+            -------
+                the associated id string
+            
+        '''
         return self.get_data()['dossier']['demarche']['id']
     def get_attached_demarche(self) -> Demarche:
+        r'''
+            Get the associated demarche object
+
+            Returns
+            -------
+                the associated demarche object
+
+            Notes
+            -----
+                Take consider that a new Demarche object will be instantiated. For instance if you want to just get the id, prefer get_attached_demarche_id()
+                
+            See Also
+            --------
+                get_attached_demarche_id
+        '''
         from .demarche import Demarche
         return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self.profile)
     def get_attached_instructeurs_info(self):
@@ -107,18 +177,38 @@ class Dossier(IData, ILog):
             self.instructeurs = self.force_fetch().get_data()['dossier']['instructeurs']
         return self.instructeurs
     def get_pdf_url(self) -> str:
-        '''Returns the url of the pdf of the dossier
+        r'''Returns the url of the pdf of the dossier
 
         Returns
         -------
-        str
             The url of the pdf of the dossier
     
         '''
         return self.get_data()['dossier']['pdf']['url']
-    #Champs retrieve
+    #Champs retrieve TODO: revoir le typage
     def get_fields(self) -> dict:
-        '''Returns the fields of the dossier as a dict of {field_id : field_value}'''
+        r'''
+        Returns the fields of the dossier as a dict 
+
+        .. highlight:: python
+        .. code-block:: python
+
+            {
+                'field_label' : 
+                {
+                    'stringValue':'foo',
+                    'id':'foo'
+                },
+                ...
+            }
+            
+
+        Returns
+        -------
+            a dict of fields value
+
+        
+        '''
         if self.fields is None:
             self.request.add_variable('includeChamps', True)
             raw_fields = self.force_fetch().get_data()['dossier']['champs']
@@ -126,9 +216,28 @@ class Dossier(IData, ILog):
             self.fields = fields
         return fields
 
-    #Annotations retrieve
+    #Annotations retrieve TODO: revoir type
     def get_annotations(self) -> list[dict[str, dict]]:
-        '''Returns the annotations of the dossier as a list of {annotation_id : annotation_value}'''
+        r'''Returns the annotations of the dossier as a dict 
+        
+        .. highlight:: python
+        .. code-block:: python
+
+            {
+                'annotation_label' :
+                {
+                    'stringValue' : 'foo',
+                    'id' : 'foo'
+                },
+                ...
+            }
+        
+        Returns
+        -------
+            Annotations dict
+
+        
+        '''
         if self.annotations is None:
             self.request.add_variable('includeAnotations', True)
             raw_annotations = self.force_fetch().get_data()['dossier']['annotations']
