@@ -94,6 +94,8 @@ class IAction(ILog):
                     The instructeur id to use to perform the action, if not provided, the profile instructeur id will be used
                 no_instructeur_id : bool, optional
                     If set to True, the action will not be performed if no instructeur id is provided to the profile or to the action
+                request_builder : RequestBuilder, optional
+                    The request builder to use to perform the action, if not provided, a new one will be created using the query_path
 
         '''
         from .connection import RequestBuilder
@@ -120,7 +122,10 @@ class IAction(ILog):
 
         # Create RequestBuilder
         try:
-            self.request = RequestBuilder(self.profile, self.query_path)
+            if 'request_builder' in kwargs:
+                self.request = kwargs['request_builder']
+            else:
+                self.request = RequestBuilder(self.profile, self.query_path)
         except DemarchesSimpyException as e:
             self.error('Error during creating request : '+ e.message)
     

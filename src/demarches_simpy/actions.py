@@ -1,10 +1,8 @@
-from .connection import RequestBuilder, Profile
+from .connection import FileUploadRequestBuilder, Profile
 from .utils import DemarchesSimpyException
 from .dossier import DossierState, Dossier
 from .interfaces import IAction, ILog
-from pathlib import Path
-import os;
-import hashlib
+
 #######################
 #       ACTIONS       #
 # action -> dossier   #
@@ -38,7 +36,7 @@ class MessageSender(IAction, ILog):
         ILog.__init__(self, header="MESSAGE_SENDER", profile=profile, **kwargs)
         IAction.__init__(self, profile, dossier, query_path='./query/send_message.graphql', instructeur_id=instructeur_id)
 
-    def perform(self, mess : str) -> bool:
+    def perform(self, mess : str, file_uploaded : dict = None) -> bool:
         r'''
             Send a message to the dossier
             
@@ -59,14 +57,17 @@ class MessageSender(IAction, ILog):
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
                 "body" : mess,
-                "attachment" : attachement_id
+                "attachment" : file_uploaded['signedBlobId'] if file_uploaded != None else None,
         }
         self.request.add_variable('input',variables)
         try:
-            self.request.send_request()
+            resp = self.request.send_request()
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
             return IAction.NETWORK_ERROR
+        if resp.json()['data']['dossierEnvoyerMessage']['errors'] != []:
+            self.warning('Message not sent : '+str(resp.json()['data']['dossierEnvoyerMessage']['errors'][0]['message']))
+            return IAction.REQUEST_ERROR
         self.info('Message sent to '+self.dossier.get_id())
         return IAction.SUCCESS
     
@@ -168,31 +169,36 @@ class AnnotationModifier(IAction, ILog):
         self.info('Anotation set to '+self.dossier.get_id())
         return IAction.SUCCESS
 
-
-class FileUploader(ILog):
+class FileUploader(IAction, ILog):
     def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
-        super().__init__(header="FILE UPLOADER", profile=profile, **kwargs)
 
-        self.profile = profile
-        self.dossier = dossier
+        request_builder = FileUploadRequestBuilder(profile, './query/actions.graphql')
 
-        # Create RequestBuilder
-        try:
-            self.request = RequestBuilder(self.profile, './query/actions.graphql')
-        except DemarchesSimpyException as e:
-            self.error('Error during creating request : '+ e.message)
+        ILog.__init__(self, header="FILE UPLOADER", profile=profile, **kwargs)
+        IAction.__init__(self, profile, dossier, request_builder=request_builder)
+
+        self.files = []
 
         self.input = {
             "dossierId": self.dossier.get_id(),
         }
 
-    def upload_file(self, file_path: str, file_name: str, file_type: str="application/pdf"):
+    def get_files_uploaded(self) -> list:
+
+        return self.files
+
+    def get_last_file_uploaded(self) -> dict:
+        if len(self.files) == 0:
+            return None
+        return self.files[-1]
+
+
+    def perform(self, file_path: str, file_name: str, file_type: str="application/pdf") -> int:
+        import os;
+        import hashlib 
+
         self.input['filename'] = file_name
         self.input['contentType'] = file_type
-
-        # path = Path(__file__).parent.absolute()
-        # file_path = os.path.join(path, file_path)
-
 
         with open(file_path, 'rb') as f:
             self.input['byteSize'] = os.path.getsize(file_path)
@@ -207,58 +213,12 @@ class FileUploader(ILog):
         }
 
         try:
-            resp = self.request.send_request(custom_body,file={'file_path': file_path, 'file_type' : file_type})
+            resp = self.request.send_request(file_path, custom_body=custom_body)
         except DemarchesSimpyException as e:
             self.warning('File not uploaded : '+e.message)
-            return False
-        self.info('Anotation set to '+self.dossier.get_id())
+            return IAction.NETWORK_ERROR
+        self.files.append({'signedBlobId' : resp, 'filename' : file_name, 'contentType' : file_type})
         return IAction.SUCCESS
-
-
-class FileUploader(ILog):
-    def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
-        super().__init__(header="FILE UPLOADER", profile=profile, **kwargs)
-
-        self.profile = profile
-        self.dossier = dossier
-
-        # Create RequestBuilder
-        try:
-            self.request = RequestBuilder(self.profile, './query/actions.graphql')
-        except DemarchesSimpyException as e:
-            self.error('Error during creating request : '+ e.message)
-
-        self.input = {
-            "dossierId": self.dossier.get_id(),
-        }
-
-    def upload_file(self, file_path: str, file_name: str, file_type: str="application/pdf"):
-        self.input['filename'] = file_name
-        self.input['contentType'] = file_type
-
-        # path = Path(__file__).parent.absolute()
-        # file_path = os.path.join(path, file_path)
-
-
-        with open(file_path, 'rb') as f:
-            self.input['byteSize'] = os.path.getsize(file_path)
-            self.input['checksum'] = hashlib.md5(f.read()).hexdigest()
-        
-        self.request.add_variable('input', self.input)
-
-        custom_body = {
-            "query": self.request.get_query(),
-            "operationName": "createDirectUpload",
-            "variables": self.request.get_variables()
-        }
-
-        try:
-            resp = self.request.send_request(custom_body,file={'file_path': file_path, 'file_type' : file_type})
-        except DemarchesSimpyException as e:
-            self.warning('File not uploaded : '+e.message)
-            return False
-        self.info('File uploaded to '+self.dossier.get_id())
-        return resp.json()['data']['createDirectUpload']['directUpload']['signedBlobId']
 
 
 

@@ -87,8 +87,8 @@ mutation createDirectUpload($input: CreateDirectUploadInput!)
   createDirectUpload(input: $input){
     directUpload{
       url
-      blobId
       signedBlobId
+      blobId
       headers
     }
   }
