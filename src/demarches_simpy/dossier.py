@@ -1,42 +1,74 @@
 from .interfaces import IData, ILog
 from .connection import Profile
 from .demarche import Demarche
-class DossierState:
+
+from enum import Enum
+class DossierState(Enum):
     '''
     This enum represents the state of a dossier in the demarches-simplifiees.fr API.
 
     Attributes
     ----------
-        ARCHIVE 
-            The dossier is archived
         CONSTRUCTION
             The dossier is in construction
-        ACCEPTER
+        ACCEPTE
             The dossier is accepted
-        REFUSER
+        REFUSE
             The dossier is refused
         SANS_SUITE
             The dossier is classified without following
     '''
-    ARCHIVE = "Archiver"
-    CONSTRUCTION = "EnConstruction"
-    INSTRUCTION = "EnInstruction"
-    ACCEPTER = "Accepter"
-    REFUSER = "Refuser"
-    SANS_SUITE = "ClasserSansSuite"
+    # ARCHIVE = "Archiver"
+    # CONSTRUCTION = "EnConstruction"
+    # INSTRUCTION = "EnInstruction"
+    # ACCEPTER = "Accepter"
+    # REFUSER = "Refuser"
+    # SANS_SUITE = "ClasserSansSuite"
+
+    CONSTRUCTION = "en_construction"
+    INSTRUCTION = "en_instruction"
+    ACCEPTE = "accepte"
+    REFUSE = "refuse"
+    SANS_SUITE = "sans_suite"
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, DossierState):
+            return self.value == __o.value
+        elif isinstance(__o, str):
+            return self.value == __o
+        else:
+            return super().__eq__(__o)
+    @staticmethod
+    def from_str(str : str) -> 'DossierState':
+        for state in DossierState:
+            if state.value == str:
+                return state
+        raise ValueError("The string provided is not a valid DossierState")
 
     @staticmethod
-    def get_from_string(str):
-        if str == 'en_construction':
-            return DossierState.CONSTRUCTION
-        elif str == 'en_instruction':
-            return DossierState.INSTRUCTION
-        elif str == 'accepter':
-            return DossierState.ACCEPTER
-        elif str == 'refuser':
-            return DossierState.REFUSER
-        elif str == 'sans_suite':
-            return DossierState.SANS_SUITE
+    def __build_query_suffix__(state) -> str:
+        if state == DossierState.CONSTRUCTION:
+            return "EnConstruction"
+        elif state == DossierState.INSTRUCTION:
+            return "EnInstruction"
+        elif state == DossierState.ACCEPTE:
+            return "Accepter"
+        elif state == DossierState.REFUSE:
+            return "Refuser"
+        elif state == DossierState.SANS_SUITE:
+            return "ClasserSansSuite"
+    # @staticmethod
+    # def get_from_string(str):
+    #     if str == 'en_construction':
+    #         return DossierState.CONSTRUCTION
+    #     elif str == 'en_instruction':
+    #         return DossierState.INSTRUCTION
+    #     elif str == 'accepter':
+    #         return DossierState.ACCEPTER
+    #     elif str == 'refuser':
+    #         return DossierState.REFUSER
+    #     elif str == 'sans_suite':
+    #         return DossierState.SANS_SUITE
 
 
 
@@ -122,7 +154,7 @@ class Dossier(IData, ILog):
 
         
     #TODO: check type unified with an enum and make tests
-    def get_dossier_state(self) -> dict:
+    def get_dossier_state(self) -> DossierState:
         r'''
         Get the dossier current state
 
@@ -142,7 +174,7 @@ class Dossier(IData, ILog):
         -------
             The current dossier state
         '''
-        return self.get_data()['dossier']['state']
+        return DossierState.from_str(self.get_data()['dossier']['state'])
     def get_attached_demarche_id(self) -> str:
         r'''
             Return the associated demarche unique id

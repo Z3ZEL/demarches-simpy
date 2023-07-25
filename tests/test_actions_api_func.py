@@ -36,7 +36,7 @@ class TestActionStateModifier():
     def test_state_modifier_with_no_error(self, dossier : Dossier, state_modifier : StateModifier):
         self.reset_state(dossier, state_modifier)
         assert dossier.get_dossier_state() == 'en_instruction'
-        assert state_modifier.perform(DossierState.ACCEPTER) == 0
+        assert state_modifier.perform(DossierState.ACCEPTE) == 0
         assert dossier.force_fetch().get_dossier_state() == 'accepte'
         self.reset_state(dossier, state_modifier)
 
