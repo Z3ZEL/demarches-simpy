@@ -38,6 +38,10 @@ class DossierState(Enum):
             return self.value == __o
         else:
             return super().__eq__(__o)
+
+    def __str__(self) -> str:
+        return self.value
+
     @staticmethod
     def from_str(str : str) -> 'DossierState':
         for state in DossierState:
