@@ -22,7 +22,7 @@ class TestDemarcheNoError():
         assert demarche.get_dossiers_count() == 1
     def test_fields_structure(self, demarche : Demarche):
         '''Test if the fields structure is correct'''
-        for field in demarche.get_fields():
+        for field in demarche.get_fields().values():
             assert field['__typename'] is not None
             assert field['id'] is not None
             assert field['label'] is not None
@@ -30,7 +30,7 @@ class TestDemarcheNoError():
             assert len(field.keys()) == 4
     def test_fields_values(self, demarche : Demarche):
         '''Test if the fields values are correct'''
-        field = demarche.get_fields()[0]
+        field = demarche.get_fields()["test-field-1"]
         assert field['label'] == "test-field-1"
         assert field['description'] == "content"
         assert field['__typename'] == "TextChampDescriptor"

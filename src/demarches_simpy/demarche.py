@@ -28,6 +28,8 @@ class Demarche(IData,ILog):
         self.id = id
         self.number = number
         self.dossiers = []
+        self.fields = {}
+        self.annotations = {}
 
         IData.__init__(self, request, profile)
         ILog.__init__(self, header="DEMARCHE", profile=profile, **kwargs)
@@ -101,13 +103,60 @@ class Demarche(IData,ILog):
         return self.dossiers
 
     #Champs retrieve
-    def get_fields(self) -> list:
-        if self.request.is_variable_set('includeRevision'):
-            return self.get_data()['demarche']['activeRevision']['champDescriptors']
-        else:
-            self.request.add_variable('includeRevision', True)
-            return self.force_fetch().get_data()['demarche']['activeRevision']['champDescriptors']    
+    def get_fields(self) -> dict[str,dict[str,str]]:
+        r'''
+            Get all fields of the demarche
 
+            Returns
+            -------
+                A dict of all fields, with the label as key and the field as value
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        'a-field' : {
+                            'label' : 'a-field',
+                            '__typename' : 'type',
+                            'description' : 'Le nom de la personne',
+                            'id' : 'uuid-1234-1234',
+                        },
+                        ...
+                    }
+                            
+        '''
+        if len(self.fields) == 0:
+            self.request.add_variable('includeRevision', True)
+            raw = self.force_fetch().get_data()['demarche']['activeRevision']['champDescriptors']    
+            self.fields = dict(map(lambda x : (x['label'],x),raw))
+        return self.fields
+    def get_annotations(self) -> dict[str,dict[str,str]]:
+        r'''
+            Get all annotation of the demarche
+
+            Returns
+            -------
+                A dict of all annotations, with the label as key and the field as value
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        'an-annotation' : {
+                            'label' : 'an-annotation',
+                            '__typename' : 'type',
+                            'description' : 'Le nom de la personne',
+                            'id' : 'uuid-1234-1234',
+                        },
+                        ...
+                    }
+                            
+        '''
+        if len(self.annotations) == 0:
+            self.request.add_variable('includeRevision', True)
+            raw = self.force_fetch().get_data()['demarche']['activeRevision']['annotationDescriptors']    
+            self.annotations = dict(map(lambda x : (x['label'],x),raw))
+        return self.annotations
     #TODO: Make a whole object for instructeurs
     def get_instructeurs_info(self):
         if not self.request.is_variable_set('includeInstructeurs'):

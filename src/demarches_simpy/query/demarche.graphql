@@ -19,6 +19,12 @@ query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false, $in
                     label
                     description
                 }
+                annotationDescriptors {
+                    __typename
+                    id
+                    label
+                    description
+                }
             }
             groupeInstructeurs @include(if: $includeGroupeInstructeurs) {
                 id 
