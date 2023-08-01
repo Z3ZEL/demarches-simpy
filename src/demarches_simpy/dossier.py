@@ -155,6 +155,15 @@ class Dossier(IData, ILog):
             return self.get_data()['dossier']['number']
         else:
             return self.number
+    def get_deposit_date(self) -> str:
+        r'''
+            Get the deposit date of the dossier.
+
+            Returns
+            -------
+                the deposit date of the dossier
+        '''
+        return self.get_data()['dossier']['dateDepot']
 
         
     #TODO: check type unified with an enum and make tests
@@ -250,7 +259,7 @@ class Dossier(IData, ILog):
             raw_fields = self.force_fetch().get_data()['dossier']['champs']
             fields = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_fields))
             self.fields = fields
-        return fields
+        return self.fields
 
     #Annotations retrieve TODO: revoir type
     def get_annotations(self) -> list[dict[str, dict]]:
