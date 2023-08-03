@@ -166,7 +166,7 @@ class Dossier(IData, ILog):
         return self.get_data()['dossier']['dateDepot']
 
         
-    #TODO: check type unified with an enum and make tests
+    #TODO: change into get_state
     def get_dossier_state(self) -> DossierState:
         r'''
         Get the dossier current state
@@ -257,7 +257,7 @@ class Dossier(IData, ILog):
         if self.fields is None:
             self.request.add_variable('includeChamps', True)
             raw_fields = self.force_fetch().get_data()['dossier']['champs']
-            fields = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_fields))
+            fields = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id'], 'type':x['__typename']}), raw_fields))
             self.fields = fields
         return self.fields
 

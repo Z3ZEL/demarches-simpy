@@ -23,6 +23,7 @@ query getDossier($dossierNumber: Int!, $includeChamps : Boolean = false, $includ
             email
         }
         champs @include(if: $includeChamps){
+            __typename
             id
             label
             stringValue
