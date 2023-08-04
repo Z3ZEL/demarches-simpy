@@ -25,16 +25,26 @@ class Demarche(IData,ILog):
         request.add_variable('demarcheNumber', number)
         
         # Call the parent constructor
-        self.id = id
-        self.number = number
-        self.dossiers = []
-        self.fields = {}
-        self.annotations = {}
+        self._id = id
+        self._number = number
+      
 
         IData.__init__(self, request, profile)
         ILog.__init__(self, header="DEMARCHE", profile=profile, **kwargs)
 
         self.debug('Demarche class class created')
+        
+    def __init_cache__(self):
+        self.dossiers = None
+        self.fields = None
+        self.annotations = None
+
+    @property
+    def id(self) -> str:
+        return self._id
+    @property
+    def number(self) -> int:
+        return self._number
 
     def get_id(self) -> str:
         r'''
@@ -43,7 +53,7 @@ class Demarche(IData,ILog):
             The unique id associated to the demarche
         '''
         if self.id is None:
-            self.id = self.get_data()['demarche']['id']
+            self._id = self.get_data()['demarche']['id']
         return self.id
     def get_number(self) -> int:
         r'''
@@ -94,7 +104,7 @@ class Demarche(IData,ILog):
             -----
                 A bit heavy, prefer using get_dossier_infos(). A pagination system is coming.
         '''
-        if len(self.dossiers) == 0 or self.get_dossiers_count() != len(self.dossiers):
+        if self.dossiers == None:
             from .dossier import Dossier
             dossiers = []
             for (id,number) in self.get_dossier_infos():
@@ -125,7 +135,7 @@ class Demarche(IData,ILog):
                     }
                             
         '''
-        if len(self.fields) == 0:
+        if self.fields == None:
             self.request.add_variable('includeRevision', True)
             raw = self.force_fetch().get_data()['demarche']['activeRevision']['champDescriptors']    
             self.fields = dict(map(lambda x : (x['label'],x),raw))
@@ -152,7 +162,7 @@ class Demarche(IData,ILog):
                     }
                             
         '''
-        if len(self.annotations) == 0:
+        if self.annotations == None:
             self.request.add_variable('includeRevision', True)
             raw = self.force_fetch().get_data()['demarche']['activeRevision']['annotationDescriptors']    
             self.annotations = dict(map(lambda x : (x['label'],x),raw))

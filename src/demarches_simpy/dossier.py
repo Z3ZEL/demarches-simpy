@@ -81,6 +81,15 @@ class Dossier(IData, ILog):
     It is used to retrieve and modify the data of a dossier.
 
     - Log header : DOSSIER
+
+    Properties
+    ----------
+        id : str
+            the dossier id
+        number : int
+            the dossier number
+        profile : Profile
+            the dossier attached profile
     '''
 
     def __init__(self, number : int, profile : Profile, id : str = None, **kwargs):
@@ -113,12 +122,8 @@ class Dossier(IData, ILog):
         request.add_variable('dossierNumber', number)
 
         # Add custom variables
-        self.id = id
-        self.number = number
-        self.fields = None
-        self.instructeurs = None
-        self.annotations = None
-        self.profile = profile
+        self._id = id
+        self._number = number
 
         # Call the parent constructor
         IData.__init__(self, request, profile)
@@ -127,8 +132,20 @@ class Dossier(IData, ILog):
 
         self.debug('Dossier class created')
 
-        if not self.profile.has_instructeur_id():
+        if not self._profile.has_instructeur_id():
             self.warning('No instructeur id was provided to the profile, some features will be missing.')
+    def __init_cache__(self):
+        self.fields = None
+        self.instructeurs = None
+        self.annotations = None
+
+    @property
+    def id(self):
+        return self._id
+    
+    @property
+    def number(self):
+        return self._number
 
     def get_id(self) -> str:
         r'''
@@ -139,9 +156,8 @@ class Dossier(IData, ILog):
             the unique id 
         '''
         if self.id is None:
-            return self.get_data()['dossier']['id']
-        else:
-            return self.id
+            self._id = self.get_data()['dossier']['id']
+        return self.id
     def get_number(self) -> int:
         r'''
             Get the associated unique dossier number.
@@ -157,7 +173,6 @@ class Dossier(IData, ILog):
             return self.number
 
         
-    #TODO: check type unified with an enum and make tests
     def get_dossier_state(self) -> DossierState:
         r'''
         Get the dossier current state
@@ -206,7 +221,7 @@ class Dossier(IData, ILog):
                 get_attached_demarche_id
         '''
         from .demarche import Demarche
-        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self.profile)
+        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self._profile)
     def get_attached_instructeurs_info(self):
         if self.instructeurs is None:
             self.request.add_variable('includeInstructeurs', True)

@@ -155,10 +155,11 @@ class IAction(ILog):
 
 class IData(ILog):
     def __init__(self, request : RequestBuilder, profile : Profile, **kwargs) -> None:
-        self.profile = profile
+        self._profile = profile
         self.has_been_fetched = False
         self.data = None
         self.request = request
+        self.__init_cache__()
     def fetch(self) -> None:
         if not self.has_been_fetched:
             response = self.request.send_request()
@@ -176,8 +177,16 @@ class IData(ILog):
     
     def force_fetch(self):
         self.has_been_fetched = False
+        self.__init_cache__()
         self.fetch()
         return self
+
+    def __init_cache__(self):
+        pass
+
+    @property
+    def profile(self):
+        return self._profile
 
     def get_id(self) -> str:
         pass

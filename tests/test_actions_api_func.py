@@ -60,7 +60,7 @@ class TestActionAnnotationModifier():
         annotation = dossier.get_annotations()['test-field-1']
         annotation['stringValues'] = ''
         annotation_modifier.perform(annotation)
-        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValues'] == ''
+        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValue'] == ''
     @pytest.fixture
     def dossier(self) -> Dossier:
         dossier = demarche.get_dossiers()[0]
@@ -74,7 +74,7 @@ class TestActionAnnotationModifier():
     def test_annotation_modifier_with_no_error(self, dossier : Dossier, annotation_modifier : AnnotationModifier):
         self.reset_annotation(dossier, annotation_modifier)
         annotation = dossier.get_annotations()['test-field-1']
-        annotation['stringValues'] = 'test'
+        annotation['stringValue'] = 'test'
         assert annotation_modifier.perform(annotation) == 0
-        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValues'] == 'test'
+        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValue'] == 'test'
         self.reset_annotation(dossier, annotation_modifier)
