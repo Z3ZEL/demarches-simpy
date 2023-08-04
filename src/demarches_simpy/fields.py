@@ -109,7 +109,12 @@ class MapField(Field):
             for raw_areas in self.rawAreas:
                 self._geo_areas.append(GeoArea(raw_areas['id'], raw_areas['source'], raw_areas['description'], raw_areas['geometry']))
         return self._geo_areas
-
+    
+    def geo_areas_to_geojson(self):
+        return {
+            "type":"FeatureCollection",
+            "features":[geo.geojson_feature for geo in self.geo_areas]
+        }
     
     @staticmethod
     def __get_keys__() -> list[str]:

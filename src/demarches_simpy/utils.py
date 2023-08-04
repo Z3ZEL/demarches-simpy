@@ -62,7 +62,21 @@ class GeoArea():
     @property
     def geometry_type(self) -> str:
         return self._shapely_geom.geom_type
-
+    @property
+    def geojson_feature(self) -> str:
+        return {
+            "type" : "Feature",
+            "properties":{},
+            "geometry":self._geometry
+        }
+    @property
+    def geojson(self) -> str:
+        return {
+            "type": "FeatureCollection",
+            "features":[
+                self.geojson_feature
+            ]
+        }
 
     def __str__(self) -> str:
         return f"{self.description} : {self.geometry_type}"
