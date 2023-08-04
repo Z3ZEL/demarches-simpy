@@ -1,0 +1,29 @@
+query getDossier($dossierNumber: Int!, $champId: ID!)
+{
+    dossier(number: $dossierNumber)
+        {
+
+        champs (id: $champId) {
+            __typename
+            id
+            label
+            stringValue
+            ... on TextChamp{
+                value
+            }
+            ... on CarteChamp{
+                rawAreas : geoAreas {
+                    description
+                    geometry {
+                        coordinates
+                        type
+                    }
+                    id
+                    source
+                }
+            }
+        }
+
+        }
+
+}

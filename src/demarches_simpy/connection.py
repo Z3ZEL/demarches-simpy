@@ -114,7 +114,7 @@ class RequestBuilder(ILog):
             headers = self.__get_header__()
         )
         if 'errors' in resp.json() and resp.json()['errors'] != None: 
-            self.error('Message not sent : '+resp.json()['errors'][0]['message'])
+            self.error('Request not sent : '+resp.json()['errors'][0]['message'])
         else:
             return resp
 

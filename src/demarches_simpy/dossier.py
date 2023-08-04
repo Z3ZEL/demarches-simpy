@@ -1,6 +1,7 @@
 from .interfaces import IData, ILog
 from .connection import Profile
 from .demarche import Demarche
+from .fields import FieldFactory, Field
 
 from enum import Enum
 class DossierState(Enum):
@@ -231,7 +232,7 @@ class Dossier(IData, ILog):
         '''
         return self.get_data()['dossier']['pdf']['url']
     #Champs retrieve TODO: revoir le typage
-    def get_fields(self) -> dict:
+    def get_fields(self) -> list[Field]:
         r'''
         Returns the fields of the dossier as a dict 
 
@@ -257,8 +258,11 @@ class Dossier(IData, ILog):
         if self.fields is None:
             self.request.add_variable('includeChamps', True)
             raw_fields = self.force_fetch().get_data()['dossier']['champs']
-            fields = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id'], 'type':x['__typename']}), raw_fields))
-            self.fields = fields
+            fields = list(map(lambda x : {'label':x['label'],'stringValue' : x['stringValue'], "id":x['id'], 'type':x['__typename']}, raw_fields))
+            self.fields = []
+            factory = FieldFactory(self)
+            for field in fields:
+                self.fields.append(factory.create_field(field['id'], field['label'], field['stringValue'], field['type']))
         return self.fields
 
     #Annotations retrieve TODO: revoir type
@@ -289,7 +293,13 @@ class Dossier(IData, ILog):
             anotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
             self.annotations = anotations
         return self.annotations
-     
+    
+    def force_fetch(self):
+        self.fields = None
+        self.annotations = None
+        self.instructeurs = None
+        return super().force_fetch()
+
     def __str__(self) -> str:
         return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + '(' + str(self.get_data()['dossier']['usager']['email']) + ')'
 

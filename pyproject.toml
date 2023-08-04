@@ -15,6 +15,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  'requests',
+  'numpy',
+  'shapely
+]
 
 [project.urls]
 "Homepage" = "https://github.com/Z3ZEL/demarches-simplifiees"

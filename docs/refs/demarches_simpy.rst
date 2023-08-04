@@ -5,7 +5,7 @@ demarches\_simpy package
 
    Actions<demarches_simpy.actions>
    Connection Interfaces<demarches_simpy.connection>
-   Data Interface<demarches_simpy.data_interface>
+   Interfaces<demarches_simpy.interfaces>
    Demarche<demarches_simpy.demarche>
    Dossier<demarches_simpy.dossier>
    Miscs<demarches_simpy.utils>
