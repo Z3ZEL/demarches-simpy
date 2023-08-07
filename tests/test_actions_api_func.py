@@ -58,8 +58,8 @@ class TestActionMessageModifier():
 class TestActionAnnotationModifier():
     def reset_annotation(self, dossier: Dossier, annotation_modifier: AnnotationModifier):
         annotation = dossier.get_annotations()['test-field-1']
-        annotation['stringValues'] = ''
-        annotation_modifier.perform(annotation)
+        annotation['stringValue'] = ''
+        assert annotation_modifier.perform(annotation) == 0
         assert dossier.force_fetch().get_annotations()['test-field-1']['stringValue'] == ''
     @pytest.fixture
     def dossier(self) -> Dossier:

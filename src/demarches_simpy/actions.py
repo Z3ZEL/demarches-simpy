@@ -149,10 +149,13 @@ class AnnotationModifier(IAction, ILog):
         }
 
         try:
-            self.request.send_request(custom_body)
+            resp = self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('Anotation not set : '+e.message)
             return IAction.NETWORK_ERROR
+        if not resp.ok:
+            self.warning('Anotation not set : '+resp.json()['errors'][0]['message'])
+            return IAction.ERROR
         self.info('Anotation set to '+self.dossier.get_id())
         return IAction.SUCCESS
 

@@ -262,7 +262,7 @@ class Dossier(IData, ILog):
         '''
         if self.fields is None:
             self.request.add_variable('includeChamps', True)
-            raw_fields = self.force_fetch().get_data()['dossier']['champs']
+            raw_fields = self.get_data()['dossier']['champs']
             fields = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_fields))
             self.fields = fields
         return fields
@@ -291,9 +291,9 @@ class Dossier(IData, ILog):
         '''
         if self.annotations is None:
             self.request.add_variable('includeAnotations', True)
-            raw_annotations = self.force_fetch().get_data()['dossier']['annotations']
-            anotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
-            self.annotations = anotations
+            raw_annotations = self.get_data()['dossier']['annotations']
+            annotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
+            self.annotations = annotations
         return self.annotations
      
     def __str__(self) -> str:
