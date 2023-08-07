@@ -82,11 +82,7 @@ class MessageSender(IAction, ILog):
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
             return IAction.NETWORK_ERROR
-<<<<<<< HEAD
         if resp.json()['data']['dossierEnvoyerMessage']['errors'] != None:
-=======
-        if not resp.ok and resp.json()['data']['dossierEnvoyerMessage']['errors'] != []:
->>>>>>> f659c11e7b135bd87dcd3771cfe483cab97e5d27
             self.warning('Message not sent : '+str(resp.json()['data']['dossierEnvoyerMessage']['errors'][0]['message']))
             print(file_uploaded['signedBlobId'])
             return IAction.REQUEST_ERROR
@@ -221,27 +217,17 @@ class FileUploader(IAction, ILog):
 
     def get_files_uploaded(self) -> list:
         r'''
-<<<<<<< HEAD
             Get the list of files uploaded
 
             Returns
             -------
             list
                 The list of files uploaded, each file is a dict with a specific structure, see :func:`FileUploader.get_last_file_uploaded` for more details
-=======
-            Get the list of files uploaded to the dossier
-
-            Returns
-            -------
-                The list of files uploaded to the dossier
-
->>>>>>> f659c11e7b135bd87dcd3771cfe483cab97e5d27
         '''
         return self.files
 
     def get_last_file_uploaded(self) -> dict:
         r'''
-<<<<<<< HEAD
             Get the last file uploaded
 
             Returns
@@ -259,13 +245,6 @@ class FileUploader(IAction, ILog):
                     }
 
                 If no file was uploaded, the method will return None
-=======
-            Get the last file uploaded to the dossier
-
-            Returns
-            -------
-                The last file uploaded to the dossier
->>>>>>> f659c11e7b135bd87dcd3771cfe483cab97e5d27
         '''
         if len(self.files) == 0:
             return None
