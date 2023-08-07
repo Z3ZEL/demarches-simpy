@@ -1,3 +1,6 @@
+import hashlib
+import base64
+
 from .connection import FileUploadRequestBuilder, Profile
 from .utils import DemarchesSimpyException
 from .dossier import DossierState, Dossier
@@ -36,7 +39,7 @@ class MessageSender(IAction, ILog):
         ILog.__init__(self, header="MESSAGE_SENDER", profile=profile, **kwargs)
         IAction.__init__(self, profile, dossier, query_path='./query/send_message.graphql', instructeur_id=instructeur_id)
 
-    def perform(self, mess : str, file_uploaded : dict = None) -> bool:
+    def     perform(self, mess : str, file_uploaded : dict = None) -> bool:
         r'''
             Send a message to the dossier
             
@@ -44,6 +47,20 @@ class MessageSender(IAction, ILog):
             ----------
             mess : str
                 The message to send
+            
+            file_uploaded : dict, optional
+                The file to send with the message, if not provided, no file will be sent
+
+                The file must be a valid file structure:
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "signedBlobId" : "file_id",
+                        "filename" : "file_name",
+                        "contentType" : "file_content_type"
+                    }
 
             Returns
             -------
@@ -65,10 +82,15 @@ class MessageSender(IAction, ILog):
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
             return IAction.NETWORK_ERROR
+<<<<<<< HEAD
         if resp.json()['data']['dossierEnvoyerMessage']['errors'] != None:
+=======
+        if not resp.ok and resp.json()['data']['dossierEnvoyerMessage']['errors'] != []:
+>>>>>>> f659c11e7b135bd87dcd3771cfe483cab97e5d27
             self.warning('Message not sent : '+str(resp.json()['data']['dossierEnvoyerMessage']['errors'][0]['message']))
+            print(file_uploaded['signedBlobId'])
             return IAction.REQUEST_ERROR
-        self.info('Message sent to '+self.dossier.get_id())
+        self.info('Message sent to '+str(self.dossier.get_number()))
         return IAction.SUCCESS
     
 class AnnotationModifier(IAction, ILog):
@@ -199,17 +221,27 @@ class FileUploader(IAction, ILog):
 
     def get_files_uploaded(self) -> list:
         r'''
+<<<<<<< HEAD
             Get the list of files uploaded
 
             Returns
             -------
             list
                 The list of files uploaded, each file is a dict with a specific structure, see :func:`FileUploader.get_last_file_uploaded` for more details
+=======
+            Get the list of files uploaded to the dossier
+
+            Returns
+            -------
+                The list of files uploaded to the dossier
+
+>>>>>>> f659c11e7b135bd87dcd3771cfe483cab97e5d27
         '''
         return self.files
 
     def get_last_file_uploaded(self) -> dict:
         r'''
+<<<<<<< HEAD
             Get the last file uploaded
 
             Returns
@@ -227,22 +259,54 @@ class FileUploader(IAction, ILog):
                     }
 
                 If no file was uploaded, the method will return None
+=======
+            Get the last file uploaded to the dossier
+
+            Returns
+            -------
+                The last file uploaded to the dossier
+>>>>>>> f659c11e7b135bd87dcd3771cfe483cab97e5d27
         '''
         if len(self.files) == 0:
             return None
         return self.files[-1]
 
 
+    def __md5__(value):
+        md5_hash = hashlib.md5(value.encode()).digest()
+        base64_encoded = base64.b64encode(md5_hash).decode()
+        return base64_encoded
+
+
     def perform(self, file_path: str, file_name: str, file_type: str="application/pdf") -> int:
+        r'''
+            Upload a file to the dossier
+
+            Parameters
+            ----------
+            file_path : str
+                The path to the file to upload
+            file_name : str
+                The name of the file to upload
+            file_type : str, optional
+                The type of the file to upload, if not provided, the file will be set to its default value : "application/pdf"
+
+            Returns
+            -------
+            SUCCESS
+                if file was uploaded
+            ERROR
+                otherwise
+
+        '''
         import os;
-        import hashlib 
 
         self.input['filename'] = file_name
         self.input['contentType'] = file_type
 
-        with open(file_path, 'rb') as f:
+        with open(file_path, 'r') as f:
             self.input['byteSize'] = os.path.getsize(file_path)
-            self.input['checksum'] = hashlib.md5(f.read()).hexdigest()
+            self.input['checksum'] = FileUploader.__md5__(f.read())
         
         self.request.add_variable('input', self.input)
 

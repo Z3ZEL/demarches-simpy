@@ -135,20 +135,15 @@ class FileUploadRequestBuilder(RequestBuilder):
 
         #Upload file 
         info = resp.json()['data']['createDirectUpload']['directUpload']
-
         url = info['url']
         headers = json.loads(info['headers'])
 
-
-    
         upload_resp = requests.put(url, data=open(file_path, 'rb'), headers=headers)
 
-        self.bold(upload_resp.url)
 
         if upload_resp.ok:
-            self.debug(str(upload_resp.headers))
-            self.debug('File create at : '+info['url'])
+            self.debug('File uploaded')
         else:
             self.error("\nCode error : "+str(upload_resp.status_code)+"\n"+ upload_resp.text)
 
-        return info['blobId']
+        return info['signedBlobId']
