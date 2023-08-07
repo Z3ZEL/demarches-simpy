@@ -65,7 +65,7 @@ class MessageSender(IAction, ILog):
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
             return IAction.NETWORK_ERROR
-        if resp.json()['data']['dossierEnvoyerMessage']['errors'] != []:
+        if resp.json()['data']['dossierEnvoyerMessage']['errors'] != None:
             self.warning('Message not sent : '+str(resp.json()['data']['dossierEnvoyerMessage']['errors'][0]['message']))
             return IAction.REQUEST_ERROR
         self.info('Message sent to '+self.dossier.get_id())
@@ -174,6 +174,16 @@ class AnnotationModifier(IAction, ILog):
         return IAction.SUCCESS
 
 class FileUploader(IAction, ILog):
+    r'''
+        Class to upload file to a dossier
+
+        Parameters
+        ----------
+        profile : Profile
+            The profile to use to perform the action
+        dossier : Dossier
+            The dossier to upload file to
+    '''
     def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
 
         request_builder = FileUploadRequestBuilder(profile, './query/actions.graphql')
@@ -188,10 +198,36 @@ class FileUploader(IAction, ILog):
         }
 
     def get_files_uploaded(self) -> list:
+        r'''
+            Get the list of files uploaded
 
+            Returns
+            -------
+            list
+                The list of files uploaded, each file is a dict with a specific structure, see :func:`FileUploader.get_last_file_uploaded` for more details
+        '''
         return self.files
 
     def get_last_file_uploaded(self) -> dict:
+        r'''
+            Get the last file uploaded
+
+            Returns
+            -------
+            dict
+                The last file uploaded, the file is a dict with the following structure:
+                
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "fileName" : "file_name",
+                        "contentType" : "file_content_type",
+                        "signedBlobId" : "file_signed_blob_id"
+                    }
+
+                If no file was uploaded, the method will return None
+        '''
         if len(self.files) == 0:
             return None
         return self.files[-1]
@@ -221,7 +257,7 @@ class FileUploader(IAction, ILog):
         except DemarchesSimpyException as e:
             self.warning('File not uploaded : '+e.message)
             return IAction.NETWORK_ERROR
-        self.files.append({'signedBlobId' : resp, 'filename' : file_name, 'contentType' : file_type})
+        self.files.append({'signedBlobId' : resp, 'fileName' : file_name, 'contentType' : file_type})
         return IAction.SUCCESS
 
 
