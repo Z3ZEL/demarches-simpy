@@ -121,6 +121,7 @@ class AnnotationModifier(IAction, ILog):
             Parameters
             ----------
             anotation : dict[str, str]
+
                 The anotation to set, must be a valid anotation structure:
 
                 .. highlight:: python
@@ -162,10 +163,13 @@ class AnnotationModifier(IAction, ILog):
         }
 
         try:
-            self.request.send_request(custom_body)
+            resp = self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('Anotation not set : '+e.message)
             return IAction.NETWORK_ERROR
+        if not resp.ok:
+            self.warning('Anotation not set : '+resp.json()['errors'][0]['message'])
+            return IAction.ERROR
         self.info('Anotation set to '+self.dossier.get_id())
         return IAction.SUCCESS
 
@@ -265,7 +269,7 @@ class StateModifier(IAction, ILog):
 
         '''
 
-        if state == DossierState.ACCEPTER or state == DossierState.REFUSER or state == DossierState.SANS_SUITE:
+        if state == DossierState.ACCEPTE or state == DossierState.REFUSE or state == DossierState.SANS_SUITE:
             self.input['motivation'] = msg
 
         self.request.add_variable('input',self.input)
@@ -273,7 +277,7 @@ class StateModifier(IAction, ILog):
         operation_name += ("Passer" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() == 'en_construction') else "")
         operation_name += ("Repasser" if (state == DossierState.INSTRUCTION and self.dossier.get_dossier_state() != 'en_construction') else "")
         operation_name += ("Repasser" if state == DossierState.CONSTRUCTION else "")
-        operation_name += state
+        operation_name += DossierState.__build_query_suffix__(state)
 
 
         custom_body = {
@@ -289,5 +293,5 @@ class StateModifier(IAction, ILog):
         if resp.json()['data'][operation_name]['errors'] != None:
             self.warning('State not changed : '+resp.json()['data'][operation_name]['errors'][0]['message'])
             return IAction.REQUEST_ERROR
-        self.info('State changed to '+state+' for '+self.dossier.get_id())
+        self.info('State changed to '+str(state)+' for '+self.dossier.get_id())
         return IAction.SUCCESS

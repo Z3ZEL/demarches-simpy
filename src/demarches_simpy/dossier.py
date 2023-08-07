@@ -1,42 +1,78 @@
 from .interfaces import IData, ILog
 from .connection import Profile
 from .demarche import Demarche
-class DossierState:
+
+from enum import Enum
+class DossierState(Enum):
     '''
     This enum represents the state of a dossier in the demarches-simplifiees.fr API.
 
     Attributes
     ----------
-        ARCHIVE 
-            The dossier is archived
         CONSTRUCTION
             The dossier is in construction
-        ACCEPTER
+        ACCEPTE
             The dossier is accepted
-        REFUSER
+        REFUSE
             The dossier is refused
         SANS_SUITE
             The dossier is classified without following
     '''
-    ARCHIVE = "Archiver"
-    CONSTRUCTION = "EnConstruction"
-    INSTRUCTION = "EnInstruction"
-    ACCEPTER = "Accepter"
-    REFUSER = "Refuser"
-    SANS_SUITE = "ClasserSansSuite"
+    # ARCHIVE = "Archiver"
+    # CONSTRUCTION = "EnConstruction"
+    # INSTRUCTION = "EnInstruction"
+    # ACCEPTER = "Accepter"
+    # REFUSER = "Refuser"
+    # SANS_SUITE = "ClasserSansSuite"
+
+    CONSTRUCTION = "en_construction"
+    INSTRUCTION = "en_instruction"
+    ACCEPTE = "accepte"
+    REFUSE = "refuse"
+    SANS_SUITE = "sans_suite"
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, DossierState):
+            return self.value == __o.value
+        elif isinstance(__o, str):
+            return self.value == __o
+        else:
+            return super().__eq__(__o)
+
+    def __str__(self) -> str:
+        return self.value
 
     @staticmethod
-    def get_from_string(str):
-        if str == 'en_construction':
-            return DossierState.CONSTRUCTION
-        elif str == 'en_instruction':
-            return DossierState.INSTRUCTION
-        elif str == 'accepter':
-            return DossierState.ACCEPTER
-        elif str == 'refuser':
-            return DossierState.REFUSER
-        elif str == 'sans_suite':
-            return DossierState.SANS_SUITE
+    def from_str(str : str) -> 'DossierState':
+        for state in DossierState:
+            if state.value == str:
+                return state
+        raise ValueError("The string provided is not a valid DossierState")
+
+    @staticmethod
+    def __build_query_suffix__(state) -> str:
+        if state == DossierState.CONSTRUCTION:
+            return "EnConstruction"
+        elif state == DossierState.INSTRUCTION:
+            return "EnInstruction"
+        elif state == DossierState.ACCEPTE:
+            return "Accepter"
+        elif state == DossierState.REFUSE:
+            return "Refuser"
+        elif state == DossierState.SANS_SUITE:
+            return "ClasserSansSuite"
+    # @staticmethod
+    # def get_from_string(str):
+    #     if str == 'en_construction':
+    #         return DossierState.CONSTRUCTION
+    #     elif str == 'en_instruction':
+    #         return DossierState.INSTRUCTION
+    #     elif str == 'accepter':
+    #         return DossierState.ACCEPTER
+    #     elif str == 'refuser':
+    #         return DossierState.REFUSER
+    #     elif str == 'sans_suite':
+    #         return DossierState.SANS_SUITE
 
 
 
@@ -45,6 +81,15 @@ class Dossier(IData, ILog):
     It is used to retrieve and modify the data of a dossier.
 
     - Log header : DOSSIER
+
+    Properties
+    ----------
+        id : str
+            the dossier id
+        number : int
+            the dossier number
+        profile : Profile
+            the dossier attached profile
     '''
 
     def __init__(self, number : int, profile : Profile, id : str = None, **kwargs):
@@ -77,12 +122,8 @@ class Dossier(IData, ILog):
         request.add_variable('dossierNumber', number)
 
         # Add custom variables
-        self.id = id
-        self.number = number
-        self.fields = None
-        self.instructeurs = None
-        self.annotations = None
-        self.profile = profile
+        self._id = id
+        self._number = number
 
         # Call the parent constructor
         IData.__init__(self, request, profile)
@@ -91,8 +132,20 @@ class Dossier(IData, ILog):
 
         self.debug('Dossier class created')
 
-        if not self.profile.has_instructeur_id():
+        if not self._profile.has_instructeur_id():
             self.warning('No instructeur id was provided to the profile, some features will be missing.')
+    def __init_cache__(self):
+        self.fields = None
+        self.instructeurs = None
+        self.annotations = None
+
+    @property
+    def id(self):
+        return self._id
+    
+    @property
+    def number(self):
+        return self._number
 
     def get_id(self) -> str:
         r'''
@@ -103,9 +156,8 @@ class Dossier(IData, ILog):
             the unique id 
         '''
         if self.id is None:
-            return self.get_data()['dossier']['id']
-        else:
-            return self.id
+            self._id = self.get_data()['dossier']['id']
+        return self.id
     def get_number(self) -> int:
         r'''
             Get the associated unique dossier number.
@@ -119,10 +171,18 @@ class Dossier(IData, ILog):
             return self.get_data()['dossier']['number']
         else:
             return self.number
+    def get_deposit_date(self) -> str:
+        r'''
+            Get the deposit date of the dossier.
+
+            Returns
+            -------
+                the deposit date of the dossier
+        '''
+        return self.get_data()['dossier']['dateDepot']
 
         
-    #TODO: check type unified with an enum and make tests
-    def get_dossier_state(self) -> dict:
+    def get_dossier_state(self) -> DossierState:
         r'''
         Get the dossier current state
 
@@ -142,7 +202,7 @@ class Dossier(IData, ILog):
         -------
             The current dossier state
         '''
-        return self.get_data()['dossier']['state']
+        return DossierState.from_str(self.get_data()['dossier']['state'])
     def get_attached_demarche_id(self) -> str:
         r'''
             Return the associated demarche unique id
@@ -170,7 +230,7 @@ class Dossier(IData, ILog):
                 get_attached_demarche_id
         '''
         from .demarche import Demarche
-        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self.profile)
+        return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self._profile)
     def get_attached_instructeurs_info(self):
         if self.instructeurs is None:
             self.request.add_variable('includeInstructeurs', True)
@@ -211,10 +271,10 @@ class Dossier(IData, ILog):
         '''
         if self.fields is None:
             self.request.add_variable('includeChamps', True)
-            raw_fields = self.force_fetch().get_data()['dossier']['champs']
+            raw_fields = self.get_data()['dossier']['champs']
             fields = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_fields))
             self.fields = fields
-        return fields
+        return self.fields
 
     #Annotations retrieve TODO: revoir type
     def get_annotations(self) -> list[dict[str, dict]]:
@@ -240,9 +300,9 @@ class Dossier(IData, ILog):
         '''
         if self.annotations is None:
             self.request.add_variable('includeAnotations', True)
-            raw_annotations = self.force_fetch().get_data()['dossier']['annotations']
-            anotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
-            self.annotations = anotations
+            raw_annotations = self.get_data()['dossier']['annotations']
+            annotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
+            self.annotations = annotations
         return self.annotations
      
     def __str__(self) -> str:

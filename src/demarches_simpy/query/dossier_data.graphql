@@ -2,7 +2,7 @@ query getDossier($dossierNumber: Int!, $includeChamps : Boolean = false, $includ
 {
     dossier(number: $dossierNumber)
         {
-        id number state
+        id number state dateDepot
         attestation {
             filename
             url
