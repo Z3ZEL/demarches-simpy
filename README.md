@@ -50,7 +50,7 @@ Then go to -> "See my profile" -> "API identification tokens" -> "Create and dis
 
 ## Getting Started
 
-To see how to simply use the package, see the [Getting Started](https://demarches-simpy.readthedocs.io/en/latest/contents/getting_started.html) page in the documentation.
+To see how to simply use the package, see the [Getting Started](https://demarches-simpy.readthedocs.io/en/latest/contents/simple_program.html) page in the documentation.
 
 ## Contributing
 
