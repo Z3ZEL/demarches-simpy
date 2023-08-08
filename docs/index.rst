@@ -1,12 +1,19 @@
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
+   :caption: 🚀 Getting Started
 
-   Getting Started<contents/getting_started>
+   A simple program <contents/simple_program>
+   Taking a look at Actions <contents/action>
+
+
 .. toctree::
    :maxdepth: 1
+   :caption: 📕 References
 
    API References <refs/demarches_simpy>
 
 Demarches SimPy
 ===============
+
  .. mdinclude:: ../README.md
+   :start-line: 1
