@@ -1,4 +1,7 @@
-from .connection import RequestBuilder, Profile
+import hashlib
+import base64
+
+from .connection import FileUploadRequestBuilder, Profile
 from .utils import DemarchesSimpyException
 from .dossier import DossierState, Dossier
 from .interfaces import IAction, ILog
@@ -36,7 +39,7 @@ class MessageSender(IAction, ILog):
         ILog.__init__(self, header="MESSAGE_SENDER", profile=profile, **kwargs)
         IAction.__init__(self, profile, dossier, query_path='./query/send_message.graphql', instructeur_id=instructeur_id)
 
-    def perform(self, mess : str) -> bool:
+    def     perform(self, mess : str, file_uploaded : dict = None) -> bool:
         r'''
             Send a message to the dossier
             
@@ -44,6 +47,20 @@ class MessageSender(IAction, ILog):
             ----------
             mess : str
                 The message to send
+            
+            file_uploaded : dict, optional
+                The file to send with the message, if not provided, no file will be sent
+
+                The file must be a valid file structure:
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "signedBlobId" : "file_id",
+                        "filename" : "file_name",
+                        "contentType" : "file_content_type"
+                    }
 
             Returns
             -------
@@ -56,15 +73,20 @@ class MessageSender(IAction, ILog):
         variables = {
                 "dossierId" : self.dossier.get_id(),
                 "instructeurId" : self.instructeur_id,
-                "body" : mess
+                "body" : mess,
+                "attachment" : file_uploaded['signedBlobId'] if file_uploaded != None else None,
         }
         self.request.add_variable('input',variables)
         try:
-            self.request.send_request()
+            resp = self.request.send_request()
         except DemarchesSimpyException as e:
             self.warning('Message not sent : '+e.message)
             return IAction.NETWORK_ERROR
-        self.info('Message sent to '+self.dossier.get_id())
+        if resp.json()['data']['dossierEnvoyerMessage']['errors'] != None:
+            self.warning('Message not sent : '+str(resp.json()['data']['dossierEnvoyerMessage']['errors'][0]['message']))
+            print(file_uploaded['signedBlobId'])
+            return IAction.REQUEST_ERROR
+        self.info('Message sent to '+str(self.dossier.get_number()))
         return IAction.SUCCESS
     
 class AnnotationModifier(IAction, ILog):
@@ -103,6 +125,16 @@ class AnnotationModifier(IAction, ILog):
     def perform(self, anotation : dict[str, str], value : str = None) -> int:
         r'''
             Set anotation to the dossier
+            anotation : dict[str, str]
+                The anotation to set, must be a valid anotation structure:
+
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "id" : "anotation_id",
+                        "stringValue" : "anotation_value"
+                    }
 
             Parameters
             ----------
@@ -149,12 +181,128 @@ class AnnotationModifier(IAction, ILog):
         }
 
         try:
-            self.request.send_request(custom_body)
+            resp = self.request.send_request(custom_body)
         except DemarchesSimpyException as e:
             self.warning('Anotation not set : '+e.message)
             return IAction.NETWORK_ERROR
+        if not resp.ok:
+            self.warning('Anotation not set : '+resp.json()['errors'][0]['message'])
+            return IAction.ERROR
         self.info('Anotation set to '+self.dossier.get_id())
         return IAction.SUCCESS
+
+class FileUploader(IAction, ILog):
+    r'''
+        Class to upload file to a dossier
+
+        Parameters
+        ----------
+        profile : Profile
+            The profile to use to perform the action
+        dossier : Dossier
+            The dossier to upload file to
+    '''
+    def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
+
+        request_builder = FileUploadRequestBuilder(profile, './query/actions.graphql')
+
+        ILog.__init__(self, header="FILE UPLOADER", profile=profile, **kwargs)
+        IAction.__init__(self, profile, dossier, request_builder=request_builder)
+
+        self.files = []
+
+        self.input = {
+            "dossierId": self.dossier.get_id(),
+        }
+
+    def get_files_uploaded(self) -> list:
+        r'''
+            Get the list of files uploaded
+
+            Returns
+            -------
+            list
+                The list of files uploaded, each file is a dict with a specific structure, see :func:`FileUploader.get_last_file_uploaded` for more details
+        '''
+        return self.files
+
+    def get_last_file_uploaded(self) -> dict:
+        r'''
+            Get the last file uploaded
+
+            Returns
+            -------
+            dict
+                The last file uploaded, the file is a dict with the following structure:
+                
+                .. highlight:: python
+                .. code-block:: python
+
+                    {
+                        "fileName" : "file_name",
+                        "contentType" : "file_content_type",
+                        "signedBlobId" : "file_signed_blob_id"
+                    }
+
+                If no file was uploaded, the method will return None
+        '''
+        if len(self.files) == 0:
+            return None
+        return self.files[-1]
+
+
+    def __md5__(value):
+        md5_hash = hashlib.md5(value.encode()).digest()
+        base64_encoded = base64.b64encode(md5_hash).decode()
+        return base64_encoded
+
+
+    def perform(self, file_path: str, file_name: str, file_type: str="application/pdf") -> int:
+        r'''
+            Upload a file to the dossier
+
+            Parameters
+            ----------
+            file_path : str
+                The path to the file to upload
+            file_name : str
+                The name of the file to upload
+            file_type : str, optional
+                The type of the file to upload, if not provided, the file will be set to its default value : "application/pdf"
+
+            Returns
+            -------
+            SUCCESS
+                if file was uploaded
+            ERROR
+                otherwise
+
+        '''
+        import os;
+
+        self.input['filename'] = file_name
+        self.input['contentType'] = file_type
+
+        with open(file_path, 'r') as f:
+            self.input['byteSize'] = os.path.getsize(file_path)
+            self.input['checksum'] = FileUploader.__md5__(f.read())
+        
+        self.request.add_variable('input', self.input)
+
+        custom_body = {
+            "query": self.request.get_query(),
+            "operationName": "createDirectUpload",
+            "variables": self.request.get_variables()
+        }
+
+        try:
+            resp = self.request.send_request(file_path, custom_body=custom_body)
+        except DemarchesSimpyException as e:
+            self.warning('File not uploaded : '+e.message)
+            return IAction.NETWORK_ERROR
+        self.files.append({'signedBlobId' : resp, 'fileName' : file_name, 'contentType' : file_type})
+        return IAction.SUCCESS
+
 
 
 

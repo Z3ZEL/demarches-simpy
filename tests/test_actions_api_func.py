@@ -3,7 +3,7 @@ import sys
 from dotenv import load_dotenv
 from os import getenv
 sys.path.append('..')
-from src.demarches_simpy import StateModifier, Profile, Demarche, Dossier, DossierState, MessageSender, AnnotationModifier
+from src.demarches_simpy import StateModifier, Profile, Demarche, Dossier, DossierState, MessageSender, AnnotationModifier, FileUploader
 
 load_dotenv()
 
@@ -58,9 +58,9 @@ class TestActionMessageModifier():
 class TestActionAnnotationModifier():
     def reset_annotation(self, dossier: Dossier, annotation_modifier: AnnotationModifier):
         annotation = dossier.get_annotations()['test-field-1']
-        annotation['stringValues'] = ''
-        annotation_modifier.perform(annotation)
-        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValues'] == ''
+        annotation['stringValue'] = ''
+        assert annotation_modifier.perform(annotation) == 0
+        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValue'] == ''
     @pytest.fixture
     def dossier(self) -> Dossier:
         dossier = demarche.get_dossiers()[0]
@@ -74,7 +74,30 @@ class TestActionAnnotationModifier():
     def test_annotation_modifier_with_no_error(self, dossier : Dossier, annotation_modifier : AnnotationModifier):
         self.reset_annotation(dossier, annotation_modifier)
         annotation = dossier.get_annotations()['test-field-1']
-        annotation['stringValues'] = 'test'
+        annotation['stringValue'] = 'test'
         assert annotation_modifier.perform(annotation) == 0
-        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValues'] == 'test'
+        assert dossier.force_fetch().get_annotations()['test-field-1']['stringValue'] == 'test'
         self.reset_annotation(dossier, annotation_modifier)
+
+class TestActionFileUploader():
+    @pytest.fixture
+    def dossier(self) -> Dossier:
+        dossier = demarche.get_dossiers()[0]
+        instructeur_id = demarche.get_instructeurs_info()[0]['id']
+        profile.set_instructeur_id(instructeur_id)
+        return dossier
+    @pytest.fixture
+    def file_uploader(self, dossier : Dossier) -> FileUploader:
+        return FileUploader(profile=profile, dossier=dossier)
+
+    def test_file_uploader_with_no_error(self, dossier : Dossier, file_uploader : FileUploader):
+        assert file_uploader.perform('tests/test.txt', 'test.txt', 'text/plain') == FileUploader.SUCCESS
+        last_file = file_uploader.get_files_uploaded()
+        assert len(last_file) == 1
+        last_file = file_uploader.get_last_file_uploaded()
+        assert last_file['fileName'] == 'test.txt'
+        assert last_file['contentType'] == 'text/plain'
+        assert last_file['signedBlobId'] != ''
+
+
+        
