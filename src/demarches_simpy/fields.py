@@ -8,6 +8,23 @@ from .utils import GeoSource, GeoArea
 from .connection import RequestBuilder
 
 class Field(IData, ILog):
+    r'''
+        Represent a field of a dossier, it's a generic class, you should use more specific class if you want to access to more specific properties
+
+        Properties
+        ----------
+            id : str
+                The id of the field
+            label : str
+                The label of the field
+            stringValue : str
+                The value of the field
+            type : str
+                The type of the field
+            dossier : Dossier
+                The dossier which the field is attached
+
+    '''
     def __init__(self, id : str, label : str, stringValue : str, type : str, dossier : Dossier, **kwargs):
         self.request = RequestBuilder(dossier.profile, 'query/fields.graphql')
         self.request.add_variable('dossierNumber', dossier.get_number())
@@ -77,6 +94,15 @@ class Field(IData, ILog):
 
 
 class TextField(Field):
+    r'''
+        Represent a text field of a dossier (all properties of Field are available)
+
+        Properties
+        ----------
+            value : str
+                The value of the field (same as stringValue but with a different name and maybe it can hold a better encoding)
+
+    '''
     value : str
     @staticmethod
     def __get_keys__() -> list[str]:
@@ -93,11 +119,9 @@ class MapField(Field):
     
     Properties
     ----------
-        geoAreas : dict
-    """
+        geoAreas : list[:doc:`GeoArea</refs/demarches_simpy.utils>`]
+            The list of GeoArea of the field
 
-    r"""
-    Raw geo data, don't interact directly with it
     """
     def reset_properties(self):
         self._geo_areas = None
@@ -110,7 +134,14 @@ class MapField(Field):
                 self._geo_areas.append(GeoArea(raw_areas['id'], raw_areas['source'], raw_areas['description'], raw_areas['geometry']))
         return self._geo_areas
     
-    def geo_areas_to_geojson(self):
+    def geo_areas_to_geojson(self) -> dict:
+        r'''
+            The geojson representation of the geo_areas
+
+            Returns
+            -------
+                The geojson representation of the geo_areas
+        '''
         return {
             "type":"FeatureCollection",
             "features":[geo.geojson_feature for geo in self.geo_areas]

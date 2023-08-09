@@ -8,4 +8,5 @@ demarches\_simpy package
    Interfaces<demarches_simpy.interfaces>
    Demarche<demarches_simpy.demarche>
    Dossier<demarches_simpy.dossier>
+   Fields<demarches_simpy.fields>
    Miscs<demarches_simpy.utils>

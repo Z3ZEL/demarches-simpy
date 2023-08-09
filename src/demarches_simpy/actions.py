@@ -124,22 +124,12 @@ class AnnotationModifier(IAction, ILog):
 
     def perform(self, anotation : dict[str, str], value : str = None) -> int:
         r'''
-            Set anotation to the dossier
-            anotation : dict[str, str]
-                The anotation to set, must be a valid anotation structure:
-
-                .. highlight:: python
-                .. code-block:: python
-
-                    {
-                        "id" : "anotation_id",
-                        "stringValue" : "anotation_value"
-                    }
+            Set annotation to the dossier
 
             Parameters
             ----------
-            anotation : dict[str, str]
 
+            anotation : dict[str, str]
                 The anotation to set, must be a valid anotation structure:
 
                 .. highlight:: python
@@ -163,6 +153,8 @@ class AnnotationModifier(IAction, ILog):
                 if anotation was set
             False
                 otherwise
+
+
         '''
         #Check if anotation is valid
         if not 'id' in anotation or (not 'stringValue' in anotation and value == None):
@@ -171,6 +163,7 @@ class AnnotationModifier(IAction, ILog):
         self.input['annotationId'] = anotation['id'] 
         self.input['value'] = anotation['stringValue'] if value == None else value
 
+    
 
         self.request.add_variable('input',self.input)
 
@@ -193,19 +186,20 @@ class AnnotationModifier(IAction, ILog):
 
 class FileUploader(IAction, ILog):
     r'''
-        Class to upload file to a dossier
+    Class to upload file to a dossier
 
-        Parameters
-        ----------
+    Parameters
+    ----------
+
         profile : Profile
             The profile to use to perform the action
         dossier : Dossier
             The dossier to upload file to
+
     '''
+    
     def __init__(self, profile: Profile, dossier: Dossier, **kwargs):
-
         request_builder = FileUploadRequestBuilder(profile, './query/actions.graphql')
-
         ILog.__init__(self, header="FILE UPLOADER", profile=profile, **kwargs)
         IAction.__init__(self, profile, dossier, request_builder=request_builder)
 

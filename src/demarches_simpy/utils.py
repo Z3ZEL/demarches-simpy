@@ -24,6 +24,16 @@ class DemarchesSimpyException(Exception):
 
 
 class GeoSource(Enum):
+    r'''
+    The source of the GeoArea
+    
+    Attributes
+    ----------
+        USER_SELECTION : int
+            The GeoArea geometry was created by the user
+        CADASTRE : int
+            The GeoArea geometry is set by a cadastre
+    '''
     USER_SELECTION = 0,
     CADASTRE = 1
 
@@ -36,9 +46,33 @@ class GeoSource(Enum):
         else:
             raise DemarchesSimpyException("The string wasn't in the correct format", "GEO_SOURCE")
 class GeoArea():
+    r"""
+    A GeoArea is an object representing a geographical area. It is composed of a geometry and a description as well as a source.
+
+
+    Properties
+    ----------
+        id : str
+            The id of the GeoArea
+        source : GeoSource
+            The source of the GeoArea (cadastre or user_selection)
+        description : str
+            The description of the GeoArea
+        geometry : shapely.Geometry
+            The geometry of the GeoArea in shapely.Geometry representation
+        geometry_type : str
+            The type of the geometry of the GeoArea (Point, Polygon, MultiPolygon, etc.)
+        wkt_geometry : str
+            The geometry of the GeoArea in WKT representation
+        geojson_feature : dict
+            The isolated geojson feature of the GeoArea
+        geojson : dict
+            The complete geojson of the GeoArea
+        
+    """
     def __init__(self, id : str, source: str, description : str, geometry : dict) -> None:
         self._id = id
-        self._source = source
+        self._source : GeoSource = GeoSource.from_str(source)
         self._description = description
         self._geometry = geometry
         self._shapely_geom = shape(geometry)
@@ -47,7 +81,7 @@ class GeoArea():
     def id(self) -> str:
         return self._id
     @property
-    def source(self) -> str:
+    def source(self) -> GeoSource:
         return self._source
     @property
     def description(self) -> str:
