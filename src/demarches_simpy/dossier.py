@@ -304,16 +304,12 @@ class Dossier(IData, ILog):
         '''
         if self.annotations is None:
             self.request.add_variable('includeAnotations', True)
-            raw_annotations = self.get_data()['dossier']['annotations']
+            raw_annotations = self.force_fetch().get_data()['dossier']['annotations']
             annotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
             self.annotations = annotations
         return self.annotations
     
-    def force_fetch(self):
-        self.fields = None
-        self.annotations = None
-        self.instructeurs = None
-        return super().force_fetch()
+
 
     def __str__(self) -> str:
         return str("Dossier id : "+self.get_data()['dossier']['id']) + '\n' + "Dossier number " + str(self.get_data()['dossier']['number']) + "\n" + '(' + str(self.get_data()['dossier']['usager']['email']) + ')'
