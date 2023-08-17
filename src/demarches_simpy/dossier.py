@@ -91,6 +91,17 @@ class Dossier(IData, ILog):
             the dossier number
         profile : Profile
             the dossier attached profile
+        state : DossierState
+            the dossier state
+
+
+    Request Variables (for fetching)
+    --------------------------------
+        includeFields : bool
+            if True, the dossier fields will be fetched
+        includeAnnotations : bool
+            if True, the dossier annotations will be fetched
+        
     '''
 
     def __init__(self, number : int, profile : Profile, id : str = None, **kwargs):
@@ -107,7 +118,7 @@ class Dossier(IData, ILog):
             the associated unique id
 
         **kwargs : dict, optional
-            verbose parameter enable verbose
+            IData and ILog optional arguments (see IData and ILog documentation)
         
         Notes
         -----
@@ -117,6 +128,7 @@ class Dossier(IData, ILog):
         from .connection import RequestBuilder
         if 'request' in kwargs:
             request = kwargs['request']
+            del kwargs['request']
         else:
             request = RequestBuilder(profile, './query/dossier_data.graphql')
         
@@ -127,9 +139,8 @@ class Dossier(IData, ILog):
         self._number = number
 
         # Call the parent constructor
-        IData.__init__(self, request, profile)
+        IData.__init__(self, request, profile, **kwargs)
         ILog.__init__(self, header='DOSSIER', profile=profile, **kwargs)
-
 
         self.debug('Dossier class created')
 
@@ -147,6 +158,10 @@ class Dossier(IData, ILog):
     @property
     def number(self):
         return self._number
+
+    @property
+    def state(self):
+        return self.get_dossier_state()
 
     def get_id(self) -> str:
         r'''
@@ -204,6 +219,9 @@ class Dossier(IData, ILog):
             The current dossier state
         '''
         return DossierState.from_str(self.get_data()['dossier']['state'])
+    
+    
+
     def get_attached_demarche_id(self) -> str:
         r'''
             Return the associated demarche unique id
@@ -234,8 +252,10 @@ class Dossier(IData, ILog):
         return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self._profile)
     def get_attached_instructeurs_info(self):
         if self.instructeurs is None:
-            self.request.add_variable('includeInstructeurs', True)
-            self.instructeurs = self.force_fetch().get_data()['dossier']['instructeurs']
+            if self.request.get_variables().get('includeInstructeurs') is None:
+                self.request.add_variable('includeInstructeurs', True)
+                self.force_fetch()
+            self.instructeurs = self.get_data()['dossier']['instructeurs']
         return self.instructeurs
     def get_pdf_url(self) -> str:
         r'''Returns the url of the pdf of the dossier
@@ -271,8 +291,10 @@ class Dossier(IData, ILog):
         
         '''
         if self.fields is None:
-            self.request.add_variable('includeChamps', True)
-            raw_fields = self.force_fetch().get_data()['dossier']['champs']
+            if self.request.get_variables().get('includeFields') is None:
+                self.request.add_variable('includeFields', True)
+                self.force_fetch()
+            raw_fields = self.get_data()['dossier']['champs']
             fields = list(map(lambda x : {'label':x['label'],'stringValue' : x['stringValue'], "id":x['id'], 'type':x['__typename']}, raw_fields))
             self.fields = []
             factory = FieldFactory(self)
@@ -303,8 +325,10 @@ class Dossier(IData, ILog):
         
         '''
         if self.annotations is None:
-            self.request.add_variable('includeAnotations', True)
-            raw_annotations = self.force_fetch().get_data()['dossier']['annotations']
+            if self.request.get_variables().get('includeAnnotations') is None:
+                self.request.add_variable('includeAnnotations', True)
+                self.force_fetch()
+            raw_annotations = self.get_data()['dossier']['annotations']
             annotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
             self.annotations = annotations
         return self.annotations

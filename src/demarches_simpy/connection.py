@@ -102,8 +102,9 @@ class RequestBuilder(ILog):
     def get_variables(self) -> dict:
         return self.variables
 
-    def add_variable(self, key : str, value : any) -> None:
+    def add_variable(self, key : str, value : any) -> 'RequestBuilder':
         self.variables[key] = value
+        return self
     
     def is_variable_set(self, key : str) -> bool:
         return key in self.variables

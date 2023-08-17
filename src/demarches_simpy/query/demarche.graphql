@@ -1,14 +1,20 @@
-query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false, $includeGroupeInstructeurs : Boolean = false, $includeInstructeurs : Boolean = false) 
+query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false, $includeGroupeInstructeurs : Boolean = false, $includeInstructeurs : Boolean = false, $cursor : String = null) 
     { 
     demarche(number: $demarcheNumber)
         { 
             id, number, title
-            dossiers(first: 100) 
+            dossiers(first: 50, after: $cursor) 
             { 
                 nodes 
                     { 
                     id number
-                    } 
+                    }
+                pageInfo {
+                    endCursor
+                    hasNextPage
+                    hasPreviousPage
+                    startCursor
+                }
             } 
             activeRevision @include(if: $includeRevision) 
             { 
