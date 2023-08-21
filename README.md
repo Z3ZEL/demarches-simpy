@@ -1,15 +1,18 @@
 # Demarches Simpy
+![logo](media/logo.png)
+
 
 A python package to access to Démarches Simplifiées API via OOP objects. 
 
 ---
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/Z3ZEL/demarches-simpy/test-python.yml)
-
+[![Demarche Simpy Tests](https://github.com/Z3ZEL/demarches-simpy/actions/workflows/test-python.yml/badge.svg)](https://github.com/Z3ZEL/demarches-simpy/actions/workflows/test-python.yml)
+[![Coverage Status](https://coveralls.io/repos/github/Z3ZEL/demarches-simpy/badge.svg)](https://coveralls.io/github/Z3ZEL/demarches-simpy)
 ---
 
 - [Demarches Simpy](#demarches-simpy)
+  - [](#)
   - [Before you start](#before-you-start)
   - [Installation](#installation)
   - [Get the Démarches Simplifiées API token](#get-the-démarches-simplifiées-api-token)
