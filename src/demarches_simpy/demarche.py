@@ -3,15 +3,14 @@ from __future__ import annotations
 from .interfaces import IData, ILog
 from .connection import RequestBuilder
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 
 if TYPE_CHECKING:
     from .connection import Profile
     from .dossier import Dossier
 
-#TODO: Add multiple pages retrieval for dossiers
-#TODO: o<ptimisation for retrieving file
+
 class Demarche(IData,ILog):
     '''
     This class represents a demarche in the demarches-simplifiees.fr API.
@@ -29,15 +28,28 @@ class Demarche(IData,ILog):
         self._number = number
       
 
-        IData.__init__(self, request, profile)
+        IData.__init__(self, request, profile, **kwargs)
         ILog.__init__(self, header="DEMARCHE", profile=profile, **kwargs)
 
         self.debug('Demarche class class created')
+
         
     def __init_cache__(self):
-        self.dossiers = None
+        self.dossiers = []
         self.fields = None
         self.annotations = None
+
+    def __next_dossier_cursor__(self, background_fetching : bool = False, **dossier_kwargs) -> bool:
+        from .dossier import Dossier
+        for node in self.get_data()['demarche']['dossiers']['nodes']:
+            self.dossiers.append(Dossier(node['number'], self._profile, node['id'], background_fetching=background_fetching, **dossier_kwargs))
+        self.request.add_variable('cursor', self.get_data()['demarche']['dossiers']['pageInfo']['endCursor'])
+        has_next = self.get_data()['demarche']['dossiers']['pageInfo']['hasNextPage']
+        self.has_been_fetched = False # Not force_fetch otherwise it would erase the dossiers cache /!\
+        return has_next
+    
+
+
 
     @property
     def id(self) -> str:
@@ -63,9 +75,14 @@ class Demarche(IData,ILog):
         '''
         return self.number
       
-    def get_dossier_infos(self) -> list:
+    def get_dossier_infos(self, limit=100) -> list[tuple[str,int]]:
         r'''
             Get a list of minimum info about all dossiers, allows you to quickly retrieved all dossier without all their data
+
+            Parameters
+            ----------
+                limit : int, optional
+                    The maximum number of dossiers to retrieve, -1 for no limit (default : 100)
 
             Returns
             -------
@@ -80,21 +97,36 @@ class Demarche(IData,ILog):
                     ]
                 
         '''
-        ids = []
-        for node in self.get_data()['demarche']['dossiers']['nodes']:
-            ids.append((node['id'], node['number']))
-        return ids
+
+        while self.__next_dossier_cursor__():
+            if len(self.dossiers) > limit and limit != -1:
+                return list(map(lambda d : (d.id, d.number), self.dossiers[:limit]))
+            elif len(self.dossiers) == limit and limit != -1:
+                return list(map(lambda d : (d.id, d.number), self.dossiers))
+        return list(map(lambda d : (d.id, d.number), self.dossiers))
+   
     def get_dossiers_count(self) -> int:
         r'''
         Returns
         -------
             The total dossier count
         '''
-        return len(self.get_dossier_infos())
+        return len(self.get_dossier_infos(limit=-1))
     
-    def get_dossiers(self) -> list[Dossier]:
+    def get_dossiers(self, limit : int = 100, dossier_filter : Callable[[Dossier],bool] = lambda _ : True, background_fetching : bool = False, **dossier_kwargs) -> list[Dossier]:
         r'''
             Get all dossier objects
+
+            Parameters
+            ----------
+                limit : int, optional
+                    The maximum number of dossiers to retrieve, -1 for no limit (default : 100)
+                dossier_filter : Callable[[Dossier],bool], optional
+                    A function that takes a dossier as parameter and return a boolean, if the function return True, the dossier will be added to the list, otherwise it will be ignored (default : lambda _ : True)
+                background_fetching : bool, optional
+                    If set to True, all fields of all dossiers will be fetched while fetching them, this will avoid synchronous fetching of each dossier (default : False) Use this if you want to filter dossiers by other fields than id and number
+                dossier_kwargs : dict, optional
+                    A dict of kwargs that will be passed to the dossier constructor (useful for passing default_variables for example)
 
             Returns
             -------
@@ -102,15 +134,26 @@ class Demarche(IData,ILog):
 
             Notes
             -----
-                A bit heavy, prefer using get_dossier_infos(). A pagination system is coming.
+                This method will fetch all dossiers, if you want to filter them, use the dossier_filter parameter, by default dossier object contains only number and id,
+                if you want filter them by other fields, you need to set background_fetching to True, this will fetch all fields of all dossiers while fetching them avoiding
+                synchronous fetching of each dossier.
         '''
-        if self.dossiers == None:
-            from .dossier import Dossier
-            dossiers = []
-            for (id,number) in self.get_dossier_infos():
-                dossiers.append(Dossier(number=number, id=id, profile=self.profile))
-            self.dossiers = dossiers
-        return self.dossiers
+
+
+
+
+        while self.__next_dossier_cursor__(background_fetching=background_fetching, **dossier_kwargs):
+            filtered = list(filter(dossier_filter, self.dossiers))
+            if len(filtered) > limit and limit != -1:
+                return filtered[:limit]
+            elif len(filtered) == limit and limit != -1:
+                return filtered
+        return list(filter(dossier_filter, self.dossiers))
+
+
+            
+        
+        
 
     #Champs retrieve
     def get_fields(self) -> dict[str,dict[str,str]]:

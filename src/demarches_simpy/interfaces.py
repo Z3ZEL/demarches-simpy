@@ -159,11 +159,38 @@ class IAction(ILog):
         pass
 
 class IData(ILog):
+    r'''
+        Internal class to create a data interface
+        All data object inherit from this class (Dossiern, Demarche for example)
+
+        Parameters
+        ----------
+        **kwargs : dict, optional
+            verbose parameter enable verbose
+            background_fetching : bool, optional
+                If set to True, the data will be fetched in background
+            default_variables : dict, optional
+                A dict of default variables to add to the request
+
+    '''
     def __init__(self, request : RequestBuilder, profile : Profile, **kwargs) -> None:
         self._profile = profile
         self.has_been_fetched = False
         self.data = None
         self.request = request
+
+
+        if 'default_variables' in kwargs and isinstance(kwargs['default_variables'], dict):
+            for key, value in kwargs['default_variables'].items():
+                print(key, value)
+                self.request.add_variable(key, value)
+            
+        # Add background fetching
+        if 'background_fetching' in kwargs and kwargs['background_fetching']:
+            from threading import Thread
+            Thread(target=self.fetch).start()
+
+
         self.__init_cache__()
     def fetch(self) -> None:
         if not self.has_been_fetched:
@@ -187,6 +214,8 @@ class IData(ILog):
         return self
 
     def __init_cache__(self):
+        pass
+    def __init_persistent_cache__(self):
         pass
 
     @property

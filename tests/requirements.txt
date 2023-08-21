@@ -1,3 +1,6 @@
+pytest
+pytest-cov
+coveralls
 requests
 python-dotenv
 numpy

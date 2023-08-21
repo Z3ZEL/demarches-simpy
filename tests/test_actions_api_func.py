@@ -44,6 +44,7 @@ class TestActionStateModifier():
 class TestActionMessageModifier():
     @pytest.fixture
     def dossier(self) -> Dossier:
+        print(demarche.get_dossiers())
         dossier = demarche.get_dossiers()[0]
         instructeur_id = demarche.get_instructeurs_info()[0]['id']
         profile.set_instructeur_id(instructeur_id)
