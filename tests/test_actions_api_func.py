@@ -105,13 +105,13 @@ class TestActionFileUploader():
 class TestActionMessageModifierError():
     @pytest.fixture
     def dossier(self) -> Dossier:
+        profile.instructeur_id = None
         dossier = demarche.get_dossiers()[0]
         return dossier
     
     def test_create_sender_without_instructor_id(self, dossier : Dossier) -> MessageSender:
         with pytest.raises(DemarchesSimpyException):
             sender = MessageSender(profile=profile, dossier=dossier)
-            print(sender.instructeur_id)
 
 
     
