@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from os import getenv
 sys.path.append('..')
 from src.demarches_simpy import Demarche, Profile
+from src.demarches_simpy.utils import DemarchesSimpyException
 
 load_dotenv()
 
@@ -48,3 +49,22 @@ class TestDemarcheNoError():
 
     def test_dossier_info(self, demarche : Demarche):
        assert len(demarche.get_dossier_infos()) == 1
+
+class TestUnknownDemarcheError():
+    @pytest.fixture
+    def demarche(self) -> Demarche:
+        profile = Profile(API_DS_KEY)
+        return Demarche(0, profile)
+
+    def test_len_dossier(self, demarche : Demarche):
+        #raise because the demarche doesn't exist
+        with pytest.raises(DemarchesSimpyException):
+            demarche.get_dossiers_count()
+    def test_fields_structure(self, demarche : Demarche):
+        #raise because the demarche doesn't exist
+        with pytest.raises(DemarchesSimpyException):
+            demarche.get_fields()
+    def test_fields_values(self, demarche : Demarche):
+        #raise because the demarche doesn't exist
+        with pytest.raises(DemarchesSimpyException):
+            demarche.get_fields()

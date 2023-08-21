@@ -2,8 +2,9 @@ import pytest
 import sys
 sys.path.append('..')
 from requests import Response
-from src.demarches_simpy.dossier import Dossier
+from src.demarches_simpy.dossier import Dossier, DossierState
 from src.demarches_simpy.connection import RequestBuilder, Profile
+from src.demarches_simpy.fields import Field
 
 
     
@@ -72,20 +73,22 @@ class TestDossierNoError():
                     "email" : "instructeur2@foo.fr"
                 }
             ]
-        if request.is_variable_set("includeChamps"):
+        if request.is_variable_set("includeFields"):
             data['data']['dossier']['champs'] = [
                 {
+                    "__typename" : "None",
                     "id" : "123",
                     "label" : "foo",
-                    "stringValue" : "value"
+                    "stringValue" : "value",
                 }
             ]
-        if request.is_variable_set('includeAnotations'):
+        if request.is_variable_set('includeAnnotations'):
             data['data']['dossier']['anotations'] = [
                 {
+                    "__typename" : "None",
                     "id" : "123",
                     "label" : "foo",
-                    "stringValue" : "value"
+                    "stringValue" : "value",
                 }
             ]
         return data
@@ -108,6 +111,16 @@ class TestDossierNoError():
 
     def test_get_dossier_state(self, dossier):
         assert dossier.get_dossier_state() == "en_instruction"
+        assert dossier.get_dossier_state() == DossierState.INSTRUCTION
+
+    def test_get_fields(self, dossier : Dossier):
+        fields = dossier.get_fields()
+        assert len(fields) == 1
+        field = fields[0]
+        assert field.label == "foo"
+        assert field.stringValue == "value"
+        assert field.id == "123"
+    
 
 
 
