@@ -27,5 +27,5 @@ jobs:
       run: |
         pip install pytest
         python -m pytest -s
-        coverage run --source=mypkg -m pytest tests/
+        coverage run --source=src -m pytest tests/
         coveralls
