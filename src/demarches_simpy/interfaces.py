@@ -106,12 +106,12 @@ class IAction(ILog):
         self.query_path = './query/actions.graphql'
 
         self.__instructeur_id = None
+
         if not 'no_instructeur_id' in kwargs:
-            if not profile.has_instructeur_id() and not 'instructeur_id' in kwargs:
-                self.error('No instructeur id was provided to the profile, cannot send message.')
             if 'instructeur_id' in kwargs:
                 self.__instructeur_id = kwargs['instructeur_id']
-           
+        #Test instructeur id
+        self.instructeur_id           
 
 
         if 'query_path' in kwargs:

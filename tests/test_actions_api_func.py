@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from os import getenv
 sys.path.append('..')
 from src.demarches_simpy import StateModifier, Profile, Demarche, Dossier, DossierState, MessageSender, AnnotationModifier, FileUploader
-
+from src.demarches_simpy.utils import DemarchesSimpyException
 load_dotenv()
 
 API_DS_KEY = getenv("API_DS_KEY", False)
@@ -102,3 +102,16 @@ class TestActionFileUploader():
 
 
         
+class TestActionMessageModifierError():
+    @pytest.fixture
+    def dossier(self) -> Dossier:
+        dossier = demarche.get_dossiers()[0]
+        return dossier
+    
+    def test_create_sender_without_instructor_id(self, dossier : Dossier) -> MessageSender:
+        with pytest.raises(DemarchesSimpyException):
+            sender = MessageSender(profile=profile, dossier=dossier)
+            print(sender.instructeur_id)
+
+
+    
