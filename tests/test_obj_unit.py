@@ -1,41 +1,12 @@
 import pytest
 import sys
 sys.path.append('..')
-from requests import Response
 from src.demarches_simpy.dossier import Dossier, DossierState
 from src.demarches_simpy.connection import RequestBuilder, Profile
 from src.demarches_simpy.fields import Field
 
+from tests.fake_api import FakeRequestBuilder, FakeResponse
 
-    
-
-class FakeRequestBuilder(RequestBuilder):
-    '''
-        Fake a request returning a response or error
-    '''
-    def __init__(self,profile, response):
-        super().__init__(profile, "query/empty.graphql")
-        self.response = response
-        self.response.set_request(self)
-    
-    def send_request(self):
-        return self.response
-
-class FakeResponse(Response):
-    '''
-        Fake a response with status code and json
-    '''
-    def __init__(self, status_code, f_content):
-        super().__init__()
-        self.status_code = status_code
-        self.f_content = f_content
-
-    def set_request(self, request):
-        self.request = request
-
-    def json(self):
-        return self.f_content(self.request)
-    
 
     
 

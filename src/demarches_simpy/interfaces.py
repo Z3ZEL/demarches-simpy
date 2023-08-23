@@ -182,7 +182,6 @@ class IData(ILog):
 
         if 'default_variables' in kwargs and isinstance(kwargs['default_variables'], dict):
             for key, value in kwargs['default_variables'].items():
-                print(key, value)
                 self.request.add_variable(key, value)
             
         # Add background fetching

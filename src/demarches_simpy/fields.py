@@ -26,7 +26,11 @@ class Field(IData, ILog):
 
     '''
     def __init__(self, id : str, label : str, stringValue : str, type : str, dossier : Dossier, **kwargs):
-        self.request = RequestBuilder(dossier.profile, 'query/fields.graphql')
+        if 'request' in kwargs:
+            self.request = kwargs['request']
+        else:
+            self.request = RequestBuilder(dossier.profile, 'query/fields.graphql')
+            
         self.request.add_variable('dossierNumber', dossier.get_number())
         self.request.add_variable('champId',id)
         IData.__init__(self,self.request, dossier.profile)

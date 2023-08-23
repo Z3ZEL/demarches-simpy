@@ -84,7 +84,6 @@ class MessageSender(IAction, ILog):
             return IAction.NETWORK_ERROR
         if resp.json()['data']['dossierEnvoyerMessage']['errors'] != None:
             self.warning('Message not sent : '+str(resp.json()['data']['dossierEnvoyerMessage']['errors'][0]['message']))
-            print(file_uploaded['signedBlobId'])
             return IAction.REQUEST_ERROR
         self.info('Message sent to '+str(self.dossier.get_number()))
         return IAction.SUCCESS
