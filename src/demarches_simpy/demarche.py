@@ -12,11 +12,17 @@ if TYPE_CHECKING:
 
 
 class Demarche(IData,ILog):
-    '''
+    r'''
     This class represents a demarche in the demarches-simplifiees.fr API.
     It is used to retrieve and modify the data of a demarche.
 
     - Log header : DEMARCHE
+
+
+    Request Variables (For fetching)
+    --------------------------------
+        - includeRevision -> For fields and annotations
+        - includeInstructeurs -> For instructeurs info
     '''
     def __init__(self, number : int, profile : Profile, id : str = None,**kwargs) :
         # Building the request

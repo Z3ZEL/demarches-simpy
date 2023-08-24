@@ -4,6 +4,7 @@
 
    A simple program <contents/simple_program>
    Taking a look at Actions <contents/action>
+   Dossier Filtering <contents/filtered_dossiers>
 
 
 .. toctree::
