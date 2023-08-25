@@ -139,8 +139,8 @@ class Dossier(IData, ILog):
         self._number = number
 
         # Call the parent constructor
-        IData.__init__(self, request, profile, **kwargs)
         ILog.__init__(self, header='DOSSIER', profile=profile, **kwargs)
+        IData.__init__(self, request, profile, **kwargs)
 
         self.debug('Dossier class created')
 
@@ -150,6 +150,9 @@ class Dossier(IData, ILog):
         self.fields = None
         self.instructeurs = None
         self.annotations = None
+
+    def __get_conditionnal_variables__(self) -> list[str]:
+        return ['Fields','Annotations','Instructeurs']
 
     @property
     def id(self):
@@ -266,8 +269,9 @@ class Dossier(IData, ILog):
     
         '''
         return self.get_data()['dossier']['pdf']['url']
-    #Champs retrieve TODO: revoir le typage
-    def get_fields(self) -> list[Field]:
+    
+
+    def get_fields(self, background_fetching=False, cascade=False) -> list[Field]:
         r'''
         Returns the fields of the dossier as a dict 
 
@@ -290,16 +294,14 @@ class Dossier(IData, ILog):
 
         
         '''
+        self.conditional_fetch('Fields')
         if self.fields is None:
-            if self.request.get_variables().get('includeFields') is None:
-                self.request.add_variable('includeFields', True)
-                self.force_fetch()
             raw_fields = self.get_data()['dossier']['champs']
             fields = list(map(lambda x : {'label':x['label'],'stringValue' : x['stringValue'], "id":x['id'], 'type':x['__typename']}, raw_fields))
             self.fields = []
             factory = FieldFactory(self)
             for field in fields:
-                self.fields.append(factory.create_field(field['id'], field['label'], field['stringValue'], field['type']))
+                self.fields.append(factory.create_field(field['id'], field['label'], field['stringValue'], field['type'], background_fetching=self.background_fetching or background_fetching, cascade = self.cascade or cascade))
         return self.fields
 
     #Annotations retrieve TODO: revoir type
@@ -324,10 +326,8 @@ class Dossier(IData, ILog):
 
         
         '''
+        self.conditional_fetch('Annotations')
         if self.annotations is None:
-            if self.request.get_variables().get('includeAnnotations') is None:
-                self.request.add_variable('includeAnnotations', True)
-                self.force_fetch()
             raw_annotations = self.get_data()['dossier']['annotations']
             annotations = dict(map(lambda x : (x['label'], {'stringValue' : x['stringValue'], "id":x['id']}), raw_annotations))
             self.annotations = annotations

@@ -178,14 +178,23 @@ class IData(ILog):
         self.has_been_fetched = False
         self.data = None
         self.request = request
-
+        self.background_fetching = False
+        self.cascade = False
 
         if 'default_variables' in kwargs and isinstance(kwargs['default_variables'], dict):
-            for key, value in kwargs['default_variables'].items():
-                self.request.add_variable(key, value)
+            for key in kwargs['default_variables']:
+                if key in self.__get_conditionnal_variables__():
+                    self.request.add_variable('include'+key, True)
+
+        if 'cascade' in kwargs and kwargs['cascade']:
+            self.cascade = True
+            for key in self.__get_conditionnal_variables__():
+                self.request.add_variable("include"+key, True)
+                self.fetch()
             
         # Add background fetching
         if 'background_fetching' in kwargs and kwargs['background_fetching']:
+            self.background_fetching = True
             from threading import Thread
             Thread(target=self.fetch).start()
 
@@ -205,13 +214,20 @@ class IData(ILog):
     def get_data(self) -> dict:
         self.fetch()
         return self.data
-    
+    def conditional_fetch(self, *arg : str):
+        for key in arg:
+            if not key in self.__get_conditionnal_variables__():
+                continue
+            if not 'include'+key in self.request.get_variables():
+                self.request.add_variable("include"+key, True)
+                self.force_fetch()
     def force_fetch(self):
         self.has_been_fetched = False
         self.__init_cache__()
         self.fetch()
         return self
-
+    def __get_conditionnal_variables__(self) -> list[str]:
+        pass
     def __init_cache__(self):
         pass
     def __init_persistent_cache__(self):

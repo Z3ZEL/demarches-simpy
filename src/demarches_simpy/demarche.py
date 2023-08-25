@@ -33,22 +33,24 @@ class Demarche(IData,ILog):
         self._id = id
         self._number = number
       
-
-        IData.__init__(self, request, profile, **kwargs)
         ILog.__init__(self, header="DEMARCHE", profile=profile, **kwargs)
+        IData.__init__(self, request, profile, **kwargs)
+        
 
         self.debug('Demarche class class created')
 
-        
+    def __get_conditionnal_variables__(self) -> list[str]:
+        return ['Fields', 'Annotations', 'Instructeurs']
     def __init_cache__(self):
         self.dossiers = []
         self.fields = None
         self.annotations = None
+        self.instructeurs = None
 
     def __next_dossier_cursor__(self, background_fetching : bool = False, **dossier_kwargs) -> bool:
         from .dossier import Dossier
         for node in self.get_data()['demarche']['dossiers']['nodes']:
-            self.dossiers.append(Dossier(node['number'], self._profile, node['id'], background_fetching=background_fetching, **dossier_kwargs))
+            self.dossiers.append(Dossier(node['number'], self._profile, node['id'], background_fetching=self.background_fetching or background_fetching,cascade=self.cascade,**dossier_kwargs))
         self.request.add_variable('cursor', self.get_data()['demarche']['dossiers']['pageInfo']['endCursor'])
         has_next = self.get_data()['demarche']['dossiers']['pageInfo']['hasNextPage']
         self.has_been_fetched = False # Not force_fetch otherwise it would erase the dossiers cache /!\
@@ -184,9 +186,9 @@ class Demarche(IData,ILog):
                     }
                             
         '''
+        self.conditional_fetch('Fields')
         if self.fields == None:
-            self.request.add_variable('includeRevision', True)
-            raw = self.force_fetch().get_data()['demarche']['activeRevision']['champDescriptors']    
+            raw = self.get_data()['demarche']['activeRevision']['champDescriptors']    
             self.fields = dict(map(lambda x : (x['label'],x),raw))
         return self.fields
     def get_annotations(self) -> dict[str,dict[str,str]]:
@@ -211,17 +213,16 @@ class Demarche(IData,ILog):
                     }
                             
         '''
+        self.conditional_fetch('Annotations')
         if self.annotations == None:
-            self.request.add_variable('includeRevision', True)
-            raw = self.force_fetch().get_data()['demarche']['activeRevision']['annotationDescriptors']    
+            raw = self.get_data()['demarche']['activeRevision']['annotationDescriptors']    
             self.annotations = dict(map(lambda x : (x['label'],x),raw))
         return self.annotations
     #TODO: Make a whole object for instructeurs
     def get_instructeurs_info(self):
-        if not self.request.is_variable_set('includeInstructeurs'):
-            self.request.add_variable('includeInstructeurs', True)
-            self.request.add_variable('includeGroupeInstructeurs', True)
-            groupes = self.force_fetch().get_data()['demarche']['groupeInstructeurs']
+        self.conditional_fetch('Instructeurs')
+        if self.instructeurs == None:
+            groupes = self.get_data()['demarche']['groupeInstructeurs']
             instructeurs = []
             for groupe in groupes:
                 for instructeur in groupe['instructeurs']:

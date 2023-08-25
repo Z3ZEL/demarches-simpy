@@ -1,4 +1,4 @@
-query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false, $includeGroupeInstructeurs : Boolean = false, $includeInstructeurs : Boolean = false, $cursor : String = null) 
+query getDemarche($demarcheNumber: Int!, $includeAnnotations : Boolean = false,$includeFields : Boolean = false, $includeInstructeurs : Boolean = false, $cursor : String = null) 
     { 
     demarche(number: $demarcheNumber)
         { 
@@ -16,23 +16,23 @@ query getDemarche($demarcheNumber: Int!, $includeRevision : Boolean = false, $in
                     startCursor
                 }
             } 
-            activeRevision @include(if: $includeRevision) 
+            activeRevision
             { 
                 id
-                champDescriptors {
+                champDescriptors @include(if: $includeFields) {
                     __typename
                     id
                     label
                     description
                 }
-                annotationDescriptors {
+                annotationDescriptors @include(if: $includeAnnotations) {
                     __typename
                     id
                     label
                     description
                 }
             }
-            groupeInstructeurs @include(if: $includeGroupeInstructeurs) {
+            groupeInstructeurs @include(if: $includeInstructeurs) {
                 id 
                 number
                 label
