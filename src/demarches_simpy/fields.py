@@ -157,7 +157,93 @@ class MapField(Field):
     
     def __str__(self) -> str:
         return f"{self.label} : Contains {len(self.geo_areas)} GeoAreas"
+class DateField(Field):
+    r'''
+        Represent a date field of a dossier (all properties of Field are available)
 
+        Properties
+        ----------
+            date : str
+                The date of the field formatted in ISO 8601 (YYYY-MM-DD) (stringValue is plain text formatted like "12 mars 2021")
+            timestamp : int
+                The timestamp of the date
+    '''
+    date : str
+
+    @property
+    def timestamp(self) -> int:
+        import datetime
+        return int(datetime.datetime.strptime(self.date, '%Y-%m-%d').timestamp())
+
+
+    @staticmethod
+    def __get_keys__() -> list[str]:
+        return ['date']
+    
+    def __str__(self) -> str:
+        return f'{self.label} : {self.date}'
+
+
+
+class MultipleDropDownField(Field):
+    r'''
+        Represent a multiple dropdown field of a dossier (all properties of Field are available)
+
+        Properties
+        ----------
+            values : list[str]
+                The values of the field (same as stringValue but with a different name and maybe it can hold a better encoding)
+
+    '''
+    values : list[str]
+    @staticmethod
+    def __get_keys__() -> list[str]:
+        return ['values']
+
+    def __str__(self) -> str:
+        return f'{self.label} : [{",".join(self.values)}]'
+
+class AttachedFileField(Field):
+    r'''
+        Represent a attached file field of a dossier (all properties of Field are available)
+
+        Properties
+        ----------
+            files : dict[str,dict[str,str]]
+                a dict of files with the url as key and the filename, size, type and url as value
+    '''
+    def __init_cache__(self):
+        self._files = None
+        return super().__init_cache__()
+
+    @property
+    def files(self) -> dict[str,dict[str,str]]:
+        '''
+            a dict of files with the url as key and the filename, size, type and url as value
+        '''
+        if self._files == None:
+            self._files = {}
+            for file in self.get_data()['dossier']['champs'][0]['files']:
+                self._files[file['url']] = {
+                    'filename':file['filename'],
+                    'size':file['byteSizeBigInt'],
+                    'type':file['contentType'],
+                    'url':file['url'],
+                }
+        return self._files
+
+    def get_file_info_by_url(self, url : str) -> dict[str,str]:
+        return self.files[url]
+        
+        
+    
+    @staticmethod
+    def __get_keys__() -> list[str]:
+        return []
+
+    def __str__(self) -> str:
+        return f'{self.label} : '+ ",".join([f"{file['filename']} ({file['size']} bytes)" for file in self.files.values()])
+    
 
 class FieldFactory():
     def __init__(self, dossier : Dossier):
@@ -168,5 +254,11 @@ class FieldFactory():
             return TextField(id, label, stringValue, type, self.dossier, **kwargs)
         elif type == "CarteChamp":
             return MapField(id, label, stringValue, type, self.dossier, **kwargs)
+        elif type == "MultipleDropDownListChamp":
+            return MultipleDropDownField(id, label, stringValue, type, self.dossier, **kwargs)
+        elif type == "DateChamp":
+            return DateField(id, label, stringValue, type, self.dossier, **kwargs)
+        elif type == "PieceJustificativeChamp":
+            return AttachedFileField(id, label, stringValue, type, self.dossier, **kwargs)
         else:
             return Field(id, label, stringValue, type, self.dossier, **kwargs)

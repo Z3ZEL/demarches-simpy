@@ -22,6 +22,22 @@ query getDossier($dossierNumber: Int!, $champId: ID!)
                     source
                 }
             }
+            ... on MultipleDropDownListChamp
+            {
+                values
+            }
+            ... on DateChamp
+            {
+                date
+            }
+            ... on PieceJustificativeChamp {
+                files {
+                    url
+                    filename
+                    contentType
+                    byteSizeBigInt
+                }
+            }
         }
 
         }
