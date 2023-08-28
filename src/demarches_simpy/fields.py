@@ -173,7 +173,12 @@ class DateField(Field):
     @property
     def timestamp(self) -> int:
         import datetime
-        return int(datetime.datetime.strptime(self.date, '%Y-%m-%d').timestamp())
+        import pytz
+
+        parisTz = pytz.timezone('Europe/Paris')
+        dt = datetime.datetime.strptime(self.date, '%Y-%m-%d')
+        dt = parisTz.localize(dt)
+        return int(dt.timestamp())
 
 
     @staticmethod
