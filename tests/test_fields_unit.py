@@ -1,15 +1,40 @@
 import pytest
 import sys
+from demarches_simpy import TextField
 sys.path.append('..')
 
 from tests.fake_api import FakeRequestBuilder, FakeResponse
 
 from src.demarches_simpy import Dossier, Profile, MapField, TextField, DateField, AttachedFileField, MultipleDropDownField
+from src.demarches_simpy.fields import FieldFactory
 from src.demarches_simpy.utils import GeoArea, GeoSource
 from src.demarches_simpy.connection import RequestBuilder
 
-class TestUnitMapField():
-    def CONTENT(request : RequestBuilder):
+
+class TestFieldUnit():
+    TYPE = 'Nothing'
+    def CONTENT(self, request : RequestBuilder):
+        return {
+            "data":{
+            }
+        }
+    @pytest.fixture
+    def field(self):
+        profile = Profile('')
+        resp = FakeResponse(200, self.CONTENT)
+        request = FakeRequestBuilder(profile, resp)
+        dossier = Dossier(123,profile,request=request)
+        factory = FieldFactory(dossier)
+        return factory.create_field('123', 'foo', '', self.TYPE, request=request)
+        
+    def test_field(self, field : TextField):
+        assert field.id == '123'
+        assert field.label == 'foo'
+        assert field.type == self.TYPE
+
+class TestFieldUnitMap(TestFieldUnit):
+    TYPE = 'CarteChamp'
+    def CONTENT(self, request : RequestBuilder):
         return {
             "data":{
                 "dossier":{
@@ -79,13 +104,8 @@ class TestUnitMapField():
             }
             }
 
-    @pytest.fixture
-    def field(self):
-        profile = Profile('')
-        resp = FakeResponse(200, TestUnitMapField.CONTENT)
-        request = FakeRequestBuilder(profile, resp)
-        field = MapField('123', 'foo', '', 'CarteChamp', Dossier(123,profile,request=request),request=request)
-        return field
+
+
 
     def test_field_geo_areas(self, field : MapField):
         assert len(field.geo_areas) == 1
@@ -143,13 +163,10 @@ class TestUnitMapField():
                 }
             }
         assert area.geometry_type == 'Polygon'
-    def test_field(self, field : MapField):
-        assert field.id == '123'
-        assert field.label == 'foo'
-        assert field.type == 'CarteChamp'
 
-class TestUnitTextField():
-    def CONTENT(request : RequestBuilder):
+class TestFieldUnitText(TestFieldUnit):
+    TYPE = 'TextChamp'
+    def CONTENT(self, request : RequestBuilder):
         return {
         "data":
             {
@@ -169,22 +186,15 @@ class TestUnitTextField():
             }
         }
 
-    @pytest.fixture
-    def field(self):
-        profile = Profile('')
-        resp = FakeResponse(200, TestUnitTextField.CONTENT)
-        request = FakeRequestBuilder(profile, resp)
-        field = TextField('123', 'foo', '', 'TextField', Dossier(123,profile,request=request),request=request)
-        return field
     
-    def test_field(self, field : TextField):
-        assert field.id == '123'
-        assert field.label == 'foo'
-        assert field.type == 'TextField'
+    def test_field(self, field: TextField):
         assert field.value == 'bar'
+        return super().test_field(field)
 
-class TestUnitDateField():
-    def CONTENT(request : RequestBuilder):
+
+class TestFieldUnitDate(TestFieldUnit):
+    TYPE = 'DateChamp'
+    def CONTENT(self, request : RequestBuilder):
         return {
         "data":
             {
@@ -203,24 +213,15 @@ class TestUnitDateField():
                 }
             }
         }
-    
-    @pytest.fixture
-    def field(self):
-        profile = Profile('')
-        resp = FakeResponse(200, TestUnitDateField.CONTENT)
-        request = FakeRequestBuilder(profile, resp)
-        field = DateField('123', 'foo', '', 'DateField', Dossier(123,profile,request=request),request=request)
-        return field
 
-    def test_field(self, field : DateField):
-        assert field.id == '123'
-        assert field.label == 'foo'
-        assert field.type == 'DateField'
+    def test_field(self, field: TextField):
         assert field.date == '2020-08-10'
         assert field.timestamp == 1597010400
+        return super().test_field(field)
 
-class TestUnitAttachedFileField():
-    def CONTENT(request : RequestBuilder):
+class TestFieldUnitAttachedFile(TestFieldUnit):
+    TYPE = 'PieceJustificativeChamp'
+    def CONTENT(self, request : RequestBuilder):
         return {
         "data":
             {
@@ -254,19 +255,7 @@ class TestUnitAttachedFileField():
         }
 
 
-    @pytest.fixture
-    def field(self):
-        profile = Profile('')
-        resp = FakeResponse(200, TestUnitAttachedFileField.CONTENT)
-        request = FakeRequestBuilder(profile, resp)
-        field = AttachedFileField('123', 'foo', '', 'PieceJustificativeChamp', Dossier(123,profile,request=request),request=request)
-        return field
-    
     def test_field(self, field : AttachedFileField):
-        assert field.id == '123'
-        assert field.label == 'foo'
-        assert field.type == 'PieceJustificativeChamp'
-
         assert len(field.files.keys()) == 2
         urls = list(field.files.keys())
         url = urls[0]
@@ -274,10 +263,12 @@ class TestUnitAttachedFileField():
         assert field.files[url]["url"] == 'https://foo.bar'
         assert field.files[url]["type"] == 'application/pdf'
         assert field.files[url]["size"] == 6000
+        return super().test_field(field)
 
 
-class TestUnitMultipleDropDownField():
-    def CONTENT(request : RequestBuilder):
+class TestFieldUnitMultipleDropDown(TestFieldUnit):
+    TYPE = 'MultipleDropDownListChamp'
+    def CONTENT(self, request : RequestBuilder):
         return {
         "data":
             {
@@ -299,21 +290,10 @@ class TestUnitMultipleDropDownField():
                 }
             }
         }
-
-    @pytest.fixture
-    def field(self):
-        profile = Profile('')
-        resp = FakeResponse(200, TestUnitMultipleDropDownField.CONTENT)
-        request = FakeRequestBuilder(profile, resp)
-        field = MultipleDropDownField('123', 'foo', '', 'MultipleDropDownListChamp', Dossier(123,profile,request=request),request=request)
-        return field
-
     def test_field(self, field : MultipleDropDownField):
-        assert field.id == '123'
-        assert field.label == 'foo'
-        assert field.type == 'MultipleDropDownListChamp'
         assert isinstance(field.values, list)
         assert len(field.values) == 2
         assert field.values[0] == 'foo'
         assert field.values[1] == 'bar'
+        return super().test_field(field)
 
