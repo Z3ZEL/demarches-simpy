@@ -1,6 +1,5 @@
 import pytest
 import sys
-from demarches_simpy import TextField
 sys.path.append('..')
 
 from tests.fake_api import FakeRequestBuilder, FakeResponse
@@ -31,7 +30,6 @@ class TestFieldUnit():
         assert field.id == '123'
         assert field.label == 'foo'
         assert field.type == self.TYPE
-
 class TestFieldUnitMap(TestFieldUnit):
     TYPE = 'CarteChamp'
     def CONTENT(self, request : RequestBuilder):
@@ -163,7 +161,6 @@ class TestFieldUnitMap(TestFieldUnit):
                 }
             }
         assert area.geometry_type == 'Polygon'
-
 class TestFieldUnitText(TestFieldUnit):
     TYPE = 'TextChamp'
     def CONTENT(self, request : RequestBuilder):
@@ -190,8 +187,6 @@ class TestFieldUnitText(TestFieldUnit):
     def test_field(self, field: TextField):
         assert field.value == 'bar'
         return super().test_field(field)
-
-
 class TestFieldUnitDate(TestFieldUnit):
     TYPE = 'DateChamp'
     def CONTENT(self, request : RequestBuilder):
@@ -214,11 +209,10 @@ class TestFieldUnitDate(TestFieldUnit):
             }
         }
 
-    def test_field(self, field: TextField):
+    def test_field(self, field: DateField):
         assert field.date == '2020-08-10'
         assert field.timestamp == 1597010400
         return super().test_field(field)
-
 class TestFieldUnitAttachedFile(TestFieldUnit):
     TYPE = 'PieceJustificativeChamp'
     def CONTENT(self, request : RequestBuilder):
@@ -264,8 +258,6 @@ class TestFieldUnitAttachedFile(TestFieldUnit):
         assert field.files[url]["type"] == 'application/pdf'
         assert field.files[url]["size"] == 6000
         return super().test_field(field)
-
-
 class TestFieldUnitMultipleDropDown(TestFieldUnit):
     TYPE = 'MultipleDropDownListChamp'
     def CONTENT(self, request : RequestBuilder):
