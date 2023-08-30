@@ -195,7 +195,7 @@ class IData(ILog):
         if not self.has_been_fetched:
             response = self.request.send_request()
             if response.status_code != 200:
-                self.error("Could not fetch data : "+str(response.status_code)+" "+response.reason)
+                self.error("Could not fetch data : "+str(response.status_code)+" "+response.reason if response.reason != None else '')
             #check if errors key is in response
             if 'errors' in response.json():
                 self.error("Could not fetch data : "+str(response.json()['errors']))

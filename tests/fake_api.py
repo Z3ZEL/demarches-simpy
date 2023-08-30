@@ -20,10 +20,13 @@ class FakeResponse(Response):
     '''
         Fake a response with status code and json
     '''
-    def __init__(self, status_code, f_content):
+    def __init__(self, status_code, f_content, **kwargs):
         super().__init__()
         self.status_code = status_code
         self.f_content = f_content
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def set_request(self, request):
         self.request = request

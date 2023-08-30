@@ -157,11 +157,27 @@ class Dossier(IData, ILog):
     
     @property
     def number(self):
-        return self._number
+        return self._number if self._number is not None else self.get_number()
 
     @property
     def state(self):
         return self.get_dossier_state()
+    
+    @property
+    def instructeurs_info(self) -> list[dict]:
+        r'''
+        Get the instructeurs info of the dossier
+
+        Returns
+        -------
+            the instructeurs info of the dossier as a list of dict (each dict contains two keys : id and email)
+
+        Deprecated
+        ----------
+            This method is deprecated, use instructeurs_info property instead
+
+        '''
+        return self.get_attached_instructeurs_info()
 
     def get_id(self) -> str:
         r'''
@@ -183,10 +199,9 @@ class Dossier(IData, ILog):
                 the number of the dossier
 
         '''
-        if self.number is None:
-            return self.get_data()['dossier']['number']
-        else:
-            return self.number
+        if self._number is None:
+            self._number = self.get_data()['dossier']['number']
+        return self._number
     def get_deposit_date(self) -> str:
         r'''
             Get the deposit date of the dossier.
@@ -250,6 +265,9 @@ class Dossier(IData, ILog):
         '''
         from .demarche import Demarche
         return Demarche(number=self.get_data()['dossier']['demarche']['number'], profile=self._profile)
+    
+
+
     def get_attached_instructeurs_info(self):
         if self.instructeurs is None:
             if self.request.get_variables().get('includeInstructeurs') is None:
